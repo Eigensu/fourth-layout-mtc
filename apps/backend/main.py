@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from datetime import datetime
 from config.settings import settings
 from config.database import connect_to_mongo, close_mongo_connection
-from app.routes import auth_router, users_router
+from app.routes import auth_router, users_router, leaderboard_router
 
 
 @asynccontextmanager
@@ -38,9 +38,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include authentication routers
+# Include routers
 app.include_router(auth_router)
 app.include_router(users_router)
+app.include_router(leaderboard_router)
 
 # Pydantic models
 class Player(BaseModel):

@@ -28,8 +28,7 @@ export default function HomePage() {
       {
         icon: TrendingUp,
         title: "Live Leaderboards",
-        description:
-          "Track your ranking and compete with players worldwide",
+        description: "Track your ranking and compete with players worldwide",
       },
       {
         icon: Shield,
@@ -51,9 +50,7 @@ export default function HomePage() {
         </div>
       ) : (
         <>
-          {/* Top Navbar with standalone Join Us button on the right */
-            // Use default items so icons appear
-          }
+          {/* Top Navbar with standalone Join Us button on the right - Use default items so icons appear */}
           <div className="relative z-50 mt-4 mb-6">
             <div className="max-w-screen-xl mx-auto px-4 sm:px-6">
               <div className="relative">
@@ -89,21 +86,31 @@ export default function HomePage() {
                     Cricket Fantasy League
                   </h1>
                   <p className="text-lg sm:text-xl text-gray-700 mb-8 max-w-xl mx-auto md:mx-0 leading-relaxed">
-                    Build your dream team, compete with friends, and rise to the top!
+                    Build your dream team, compete with friends, and rise to the
+                    top!
                   </p>
                   <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start items-center">
                     {isAuthenticated ? (
-                      <Link href="/demo" className="inline-flex items-center px-10 py-4 rounded-full text-lg font-semibold text-white bg-gradient-to-r from-orange-500 via-red-500 to-yellow-500 shadow-lg hover:shadow-[0_0_20px_rgba(255,100,0,0.5)] transition-all duration-300 group">
+                      <Link
+                        href="/demo"
+                        className="inline-flex items-center px-10 py-4 rounded-full text-lg font-semibold text-white bg-gradient-to-r from-orange-500 via-red-500 to-yellow-500 shadow-lg hover:shadow-[0_0_20px_rgba(255,100,0,0.5)] transition-all duration-300 group"
+                      >
                         Make Your Team Now
                         <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
                       </Link>
                     ) : (
                       <>
-                        <Link href="/auth/login" className="inline-flex items-center px-10 py-4 rounded-full text-lg font-semibold text-white bg-gradient-to-r from-orange-500 via-red-500 to-yellow-500 shadow-lg hover:shadow-[0_0_20px_rgba(255,100,0,0.5)] transition-all duration-300 group">
+                        <Link
+                          href="/auth/login"
+                          className="inline-flex items-center px-10 py-4 rounded-full text-lg font-semibold text-white bg-gradient-to-r from-orange-500 via-red-500 to-yellow-500 shadow-lg hover:shadow-[0_0_20px_rgba(255,100,0,0.5)] transition-all duration-300 group"
+                        >
                           Get Started
                           <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
                         </Link>
-                        <Link href="/auth/login" className="inline-flex items-center border-2 border-white/30 bg-white/10 text-white hover:bg-white/20 px-8 py-3 rounded-full text-lg backdrop-blur-sm">
+                        <Link
+                          href="/auth/login"
+                          className="inline-flex items-center border-2 border-white/30 bg-white/10 text-white hover:bg-white/20 px-8 py-3 rounded-full text-lg backdrop-blur-sm"
+                        >
                           Sign In
                         </Link>
                       </>
@@ -120,8 +127,12 @@ export default function HomePage() {
                 >
                   <div className="w-full h-80 bg-gray-50 rounded-2xl flex items-center justify-center border border-gray-200 shadow-sm">
                     <div className="text-center">
-                      <p className="text-gray-800 text-xl">Visual Element Here</p>
-                      <p className="text-sm text-gray-500">(e.g., Image of a cricketer)</p>
+                      <p className="text-gray-800 text-xl">
+                        Visual Element Here
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        (e.g., Image of a cricketer)
+                      </p>
                     </div>
                   </div>
                 </motion.div>
@@ -137,7 +148,8 @@ export default function HomePage() {
                   Why Choose Us?
                 </h2>
                 <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                  Experience the most engaging cricket fantasy platform with powerful features
+                  Experience the most engaging cricket fantasy platform with
+                  powerful features
                 </p>
               </div>
 
@@ -154,7 +166,9 @@ export default function HomePage() {
                       <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center mb-4 shadow-inner">
                         <Icon className="w-7 h-7 text-white" />
                       </div>
-                      <h3 className="text-xl font-semibold text-gray-900 mb-2">{feature.title}</h3>
+                      <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                        {feature.title}
+                      </h3>
                       <p className="text-gray-600">{feature.description}</p>
                     </div>
                   );
@@ -177,7 +191,8 @@ export default function HomePage() {
                   Ready to Play?
                 </h2>
                 <p className="text-lg text-white/90 mb-8 max-w-2xl mx-auto">
-                  Join thousands of cricket fans and start your fantasy league journey today
+                  Join thousands of cricket fans and start your fantasy league
+                  journey today
                 </p>
                 {isAuthenticated ? (
                   <Link

@@ -2,6 +2,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from beanie import init_beanie
 from config.settings import get_settings
 from app.models.user import User, RefreshToken, UserProfile
+from app.models.team import Team
 
 settings = get_settings()
 
@@ -24,7 +25,7 @@ async def connect_to_mongo():
         # Initialize Beanie with document models
         await init_beanie(
             database=client[settings.mongodb_db_name],
-            document_models=[User, RefreshToken, UserProfile]
+            document_models=[User, RefreshToken, UserProfile, Team]
         )
         print(f"✓ Initialized Beanie ODM with database: {settings.mongodb_db_name}")
 

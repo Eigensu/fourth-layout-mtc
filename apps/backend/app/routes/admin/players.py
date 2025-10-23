@@ -4,6 +4,9 @@ from beanie.operators import RegEx, Or, And
 from datetime import datetime
 
 from app.models.admin.player import Player
+from app.models.team import Team
+from app.models.player import Player as PublicPlayer
+from beanie import PydanticObjectId
 from app.schemas.admin.player import (
     PlayerCreate,
     PlayerUpdate,
@@ -196,6 +199,41 @@ async def update_player(
         
         player.updated_at = datetime.utcnow()
         await player.save()
+
+        # If points changed, recompute totals for all impacted teams
+        if "points" in update_data:
+            # Teams store player_ids as strings of ObjectId
+            impacted_teams = await Team.find({"player_ids": player_id}).to_list()
+
+            # Collect all needed player ObjectIds in one pass
+            all_player_ids = set()
+            team_player_ids_map = {}
+            for team in impacted_teams:
+                player_object_ids = []
+                for pid in team.player_ids:
+                    try:
+                        obj_id = PydanticObjectId(pid)
+                        player_object_ids.append(obj_id)
+                        all_player_ids.add(obj_id)
+                    except Exception:
+                        continue
+                team_player_ids_map[team.id] = player_object_ids
+
+            # Fetch all players needed across all teams in a single query
+            players = []
+            if all_player_ids:
+                players = await PublicPlayer.find({"_id": {"$in": list(all_player_ids)}}).to_list()
+
+            # Build lookup of player -> points
+            player_points_map = {p.id: float(p.points or 0.0) for p in players}
+
+            # Update each team's total using the pre-fetched points
+            for team in impacted_teams:
+                player_object_ids = team_player_ids_map.get(team.id, [])
+                total = sum(player_points_map.get(obj_id, 0.0) for obj_id in player_object_ids)
+                team.total_points = total
+                team.updated_at = datetime.utcnow()
+                await team.save()
     
     return PlayerResponse(
         id=str(player.id),

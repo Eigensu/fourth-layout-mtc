@@ -1,9 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Header
-from typing import Optional
+from typing import Optional, List, Tuple
 from app.models.user import User
 from app.models.team import Team
 from app.schemas.leaderboard import LeaderboardResponseSchema, LeaderboardEntrySchema
 from app.utils.security import decode_token
+from beanie import PydanticObjectId
+from app.models.player import Player as PublicPlayer
+from datetime import datetime
 
 router = APIRouter(prefix="/api/leaderboard", tags=["leaderboard"])
 
@@ -30,27 +33,81 @@ async def get_optional_current_user(authorization: Optional[str] = Header(None))
         return None
 
 
+async def _compute_team_points(team: Team) -> float:
+    """Sum current points of all players in a team."""
+    player_object_ids = []
+    for pid in team.player_ids:
+        try:
+            player_object_ids.append(PydanticObjectId(pid))
+        except Exception:
+            continue
+    if not player_object_ids:
+        return 0.0
+    players = await PublicPlayer.find({"_id": {"$in": player_object_ids}}).to_list()
+    return float(sum(float(p.points or 0.0) for p in players))
+
+
 @router.get("", response_model=LeaderboardResponseSchema)
 async def get_leaderboard(
-    current_user: Optional[User] = Depends(get_optional_current_user)
-):
+    current_user: Optional[User] = Depends(get_optional_current_user),
+) -> LeaderboardResponseSchema:
     """
     Get the global leaderboard with all teams ranked by total points.
     If user is authenticated, also returns their position.
     """
     try:
-        # Fetch all teams sorted by points (descending)
-        teams = await Team.find_all().sort(-Team.total_points).to_list()
-        
+        # Fetch all teams
+        teams = await Team.find_all().to_list()
+
         # If no teams exist, return mock data for development
         if not teams:
             return _get_mock_leaderboard(current_user)
-        
+
         # Build leaderboard entries
         entries = []
         current_user_entry = None
         
-        for idx, team in enumerate(teams):
+        # Compute points for all teams with a single players query to avoid N+1
+        # 1) Collect all player ObjectIds across teams
+        all_player_ids: set[PydanticObjectId] = set()
+        team_player_ids_map: dict[str, list[PydanticObjectId]] = {}
+        for team in teams:
+            obj_ids: list[PydanticObjectId] = []
+            for pid in team.player_ids:
+                try:
+                    obj_ids.append(PydanticObjectId(pid))
+                except Exception:
+                    continue
+            team_player_ids_map[str(team.id)] = obj_ids
+            all_player_ids.update(obj_ids)
+
+        # 2) Fetch all needed players once
+        players = []
+        if all_player_ids:
+            players = await PublicPlayer.find({"_id": {"$in": list(all_player_ids)}}).to_list()
+
+        # 3) Build a points lookup
+        player_points_map = {str(p.id): float(p.points or 0.0) for p in players}
+
+        # 4) Compute per-team totals using the lookup and optionally sync stored totals
+        team_points_list: List[Tuple[Team, float]] = []
+        for team in teams:
+            ids_for_team = team_player_ids_map.get(str(team.id), [])
+            computed_points = sum(player_points_map.get(str(obj_id), 0.0) for obj_id in ids_for_team)
+            team_points_list.append((team, float(computed_points)))
+            # Sync stored total if differs
+            try:
+                if float(team.total_points or 0.0) != float(computed_points):
+                    team.total_points = float(computed_points)
+                    team.updated_at = datetime.utcnow()
+                    await team.save()
+            except Exception:
+                pass
+
+        # Sort by computed points desc
+        team_points_list.sort(key=lambda x: x[1], reverse=True)
+
+        for idx, (team, points) in enumerate(team_points_list):
             rank = idx + 1
             
             # Get user info for this team
@@ -63,7 +120,7 @@ async def get_leaderboard(
                 username=user.username,
                 displayName=user.full_name or user.username,
                 teamName=team.team_name,
-                points=team.total_points,
+                points=points,
                 rankChange=team.rank_change
             )
             
@@ -82,91 +139,3 @@ async def get_leaderboard(
         # In case of error, return mock data
         print(f"Error fetching leaderboard: {e}")
         return _get_mock_leaderboard(current_user)
-
-
-def _get_mock_leaderboard(current_user: Optional[User] = None) -> LeaderboardResponseSchema:
-    """Return mock leaderboard data for development/testing"""
-    
-    mock_entries = [
-        LeaderboardEntrySchema(
-            rank=1,
-            username="CricketMaster2024",
-            displayName="CricketMaster2024",
-            teamName="Mumbai Warriors",
-            points=2456.0,
-            rankChange=1
-        ),
-        LeaderboardEntrySchema(
-            rank=2,
-            username="FantasyKing",
-            displayName="FantasyKing",
-            teamName="Chennai Superstars",
-            points=2398.0,
-            rankChange=-1
-        ),
-        LeaderboardEntrySchema(
-            rank=3,
-            username="IPLGuru",
-            displayName="IPLGuru",
-            teamName="Bangalore Bolts",
-            points=2334.0,
-            rankChange=1
-        ),
-        LeaderboardEntrySchema(
-            rank=4,
-            username="CaptainCool",
-            displayName="CaptainCool",
-            teamName="Delhi Dynamos",
-            points=2289.0,
-            rankChange=-1
-        ),
-        LeaderboardEntrySchema(
-            rank=5,
-            username="SixesAndFours",
-            displayName="SixesAndFours",
-            teamName="Kolkata Kings",
-            points=2245.0,
-            rankChange=1
-        ),
-        LeaderboardEntrySchema(
-            rank=6,
-            username="BowlerBeast",
-            displayName="BowlerBeast",
-            teamName="Punjab Panthers",
-            points=2201.0,
-            rankChange=-1
-        ),
-        LeaderboardEntrySchema(
-            rank=7,
-            username="AllRounderAce",
-            displayName="AllRounderAce",
-            teamName="Rajasthan Royals",
-            points=2156.0,
-            rankChange=1
-        ),
-        LeaderboardEntrySchema(
-            rank=8,
-            username="PowerPlay",
-            displayName="PowerPlay",
-            teamName="Hyderabad Heroes",
-            points=2134.0,
-            rankChange=-1
-        ),
-    ]
-    
-    # If current user is authenticated, add their entry
-    current_user_entry = None
-    if current_user:
-        current_user_entry = LeaderboardEntrySchema(
-            rank=142,
-            username=current_user.username,
-            displayName=current_user.full_name or current_user.username,
-            teamName="Fantasy Crusaders",
-            points=1456.0,
-            rankChange=0
-        )
-    
-    return LeaderboardResponseSchema(
-        entries=mock_entries,
-        currentUserEntry=current_user_entry
-    )

@@ -1,22 +1,21 @@
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+import { API_BASE_URL, CONTENT_TYPES, AUTH, API, ROUTES, LS_KEYS } from '@/common/consts';
 
 // Create axios instance
 const apiClient: AxiosInstance = axios.create({
-  baseURL: API_URL,
+  baseURL: API_BASE_URL,
   headers: {
-    'Content-Type': 'application/json',
+    'Content-Type': CONTENT_TYPES.JSON,
   },
-  timeout: 10000,
+  timeout: API.TIMEOUT_MS,
 });
 
 // Request interceptor to add auth token
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem(LS_KEYS.ACCESS_TOKEN);
     if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
+      config.headers[AUTH.HEADER] = `${AUTH.BEARER_PREFIX}${token}`;
     }
     return config;
   },
@@ -32,9 +31,9 @@ apiClient.interceptors.response.use(
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
     // Don't retry for auth endpoints (login, register, refresh)
-    const isAuthEndpoint = originalRequest?.url?.includes('/api/auth/login') || 
-                          originalRequest?.url?.includes('/api/auth/register') ||
-                          originalRequest?.url?.includes('/api/auth/refresh');
+    const isAuthEndpoint = originalRequest?.url?.includes(`${API.PREFIX}/auth/login`) || 
+                          originalRequest?.url?.includes(`${API.PREFIX}/auth/register`) ||
+                          originalRequest?.url?.includes(`${API.PREFIX}/auth/refresh`);
 
     // For auth endpoints with 401, just reject with a clear error - NO retry, NO redirect
     if (error.response?.status === 401 && isAuthEndpoint) {
@@ -46,12 +45,12 @@ apiClient.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        const refreshToken = localStorage.getItem('refresh_token') || sessionStorage.getItem('refresh_token');
+        const refreshToken = localStorage.getItem(LS_KEYS.REFRESH_TOKEN) || sessionStorage.getItem(LS_KEYS.REFRESH_TOKEN);
         
         if (refreshToken) {
           // Try to refresh the token
           const response = await axios.post(
-            `${API_URL}/api/auth/refresh`,
+            `${API_BASE_URL}${API.PREFIX}/auth/refresh`,
             null,
             {
               params: { refresh_token: refreshToken }
@@ -61,16 +60,16 @@ apiClient.interceptors.response.use(
           const { access_token, refresh_token: new_refresh_token } = response.data;
 
           // Update tokens in storage
-          localStorage.setItem('access_token', access_token);
-          if (localStorage.getItem('refresh_token')) {
-            localStorage.setItem('refresh_token', new_refresh_token);
+          localStorage.setItem(LS_KEYS.ACCESS_TOKEN, access_token);
+          if (localStorage.getItem(LS_KEYS.REFRESH_TOKEN)) {
+            localStorage.setItem(LS_KEYS.REFRESH_TOKEN, new_refresh_token);
           } else {
-            sessionStorage.setItem('refresh_token', new_refresh_token);
+            sessionStorage.setItem(LS_KEYS.REFRESH_TOKEN, new_refresh_token);
           }
 
           // Update the authorization header
           if (originalRequest.headers) {
-            originalRequest.headers.Authorization = `Bearer ${access_token}`;
+            originalRequest.headers[AUTH.HEADER] = `${AUTH.BEARER_PREFIX}${access_token}`;
           }
 
           // Retry the original request
@@ -78,14 +77,14 @@ apiClient.interceptors.response.use(
         }
       } catch (refreshError) {
         // If refresh fails, clear tokens and redirect to login
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        localStorage.removeItem('user');
-        sessionStorage.removeItem('refresh_token');
+        localStorage.removeItem(LS_KEYS.ACCESS_TOKEN);
+        localStorage.removeItem(LS_KEYS.REFRESH_TOKEN);
+        localStorage.removeItem(LS_KEYS.USER);
+        sessionStorage.removeItem(LS_KEYS.REFRESH_TOKEN);
         
         // Only redirect if we're not already on an auth page
         if (typeof window !== 'undefined' && !window.location.pathname.includes('/auth/')) {
-          window.location.href = '/auth/login';
+          window.location.href = ROUTES.LOGIN;
         }
         
         return Promise.reject(refreshError);
@@ -102,7 +101,18 @@ export default apiClient;
 export const getErrorMessage = (error: unknown): string => {
   if (axios.isAxiosError(error)) {
     const status = error.response?.status;
-    const detail = error.response?.data?.detail;
+    const detailRaw = (error.response as any)?.data?.detail;
+    let detail: string | undefined;
+    if (typeof detailRaw === 'string') {
+      detail = detailRaw;
+    } else if (Array.isArray(detailRaw)) {
+      // pydantic-style list of errors
+      detail = detailRaw
+        .map((d: any) => d?.msg || d?.message || JSON.stringify(d))
+        .join('; ');
+    } else if (detailRaw && typeof detailRaw === 'object') {
+      detail = JSON.stringify(detailRaw);
+    }
     
     // Check for specific 401 errors
     if (status === 401) {

@@ -34,7 +34,7 @@ interface PillNavbarProps {
 }
 
 const DEFAULT_ITEMS: PillNavItem[] = [
-  { id: "home", label: "Home", href: "/", icon: <Home className="w-4 h-4" /> },
+  { id: "home", label: "Home", href: "/home", icon: <Home className="w-4 h-4" /> },
   {
     id: "contests",
     label: "Contests",
@@ -75,11 +75,17 @@ const PillNavbar: React.FC<PillNavbarProps> = ({
   const { isAuthenticated, logout } = useAuth();
   const userMenuRef = React.useRef<HTMLDivElement>(null);
 
+  const visibleItems = React.useMemo(() => {
+    if (isAuthenticated) return items;
+    const allow = new Set(["home", "leaderboard", "about"]);
+    return items.filter((it) => allow.has(it.id));
+  }, [isAuthenticated, items]);
+
   const currentActiveId = React.useMemo(() => {
     if (activeId) return activeId;
-    const match = items.find((it) => it.href === pathname);
+    const match = visibleItems.find((it) => it.href === pathname);
     return match?.id;
-  }, [activeId, items, pathname]);
+  }, [activeId, visibleItems, pathname]);
 
   // Lock body scroll when mobile menu is open
   React.useEffect(() => {
@@ -146,7 +152,7 @@ const PillNavbar: React.FC<PillNavbarProps> = ({
                 className="rounded-full object-cover"
               />
             </div>
-            {items.map((item) => {
+            {visibleItems.map((item) => {
               const isActive = item.id === currentActiveId;
               return (
                 <button
@@ -319,7 +325,7 @@ const PillNavbar: React.FC<PillNavbarProps> = ({
         {/* Menu Content */}
         <div className="overflow-y-auto h-[calc(100%-73px)] p-4">
           <div className="space-y-1">
-            {items.map((item) => {
+            {visibleItems.map((item) => {
               const isActive = item.id === currentActiveId;
               return (
                 <button

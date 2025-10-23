@@ -6,6 +6,7 @@ import { PlayerCard, PlayerList, StepCard, ProgressIndicator, Button, Badge, Car
 import type { Player } from "@/components";
 import { MobileUserMenu } from "@/components/navigation/MobileUserMenu";
 import { useAuth } from "@/contexts/AuthContext";
+import { LS_KEYS, ROUTES } from "@/common/consts";
 import { createTeam, getUserTeams, getTeam, type TeamResponse } from "@/lib/api/teams";
 import { publicContestsApi, type EnrollmentResponse } from "@/lib/api/public/contests";
 import { useTeamBuilder } from "@/hooks/useTeamBuilder";
@@ -75,7 +76,7 @@ export default function ContestTeamBuilderPage() {
   // Auth protection
   useEffect(() => {
     if (isAuthenticated === false && contestId) {
-      router.push(`/auth/login?next=${encodeURIComponent(`/contests/${contestId}/team`)}`);
+      router.push(`${ROUTES.LOGIN}?next=${encodeURIComponent(`/contests/${contestId}/team`)}`);
     }
   }, [isAuthenticated, contestId, router]);
 
@@ -91,7 +92,7 @@ export default function ContestTeamBuilderPage() {
         const e = Array.isArray(mine) ? mine.find((x) => x.contest_id === contestId) : undefined;
         setEnrolledHere(!!e);
         setEnrollment(e || null);
-        const token = localStorage.getItem("access_token");
+        const token = localStorage.getItem(LS_KEYS.ACCESS_TOKEN);
         if (e?.team_id && token) {
           try {
             setLoadingTeam(true);
@@ -153,7 +154,7 @@ export default function ContestTeamBuilderPage() {
 
     try {
       setSubmitting(true);
-      const token = localStorage.getItem("access_token");
+      const token = localStorage.getItem(LS_KEYS.ACCESS_TOKEN);
       if (!token) {
         throw new Error("Not authenticated");
       }

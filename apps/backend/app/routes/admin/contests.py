@@ -6,6 +6,8 @@ from beanie import PydanticObjectId
 from app.models.contest import Contest
 from app.models.team import Team
 from app.models.team_contest_enrollment import TeamContestEnrollment
+from app.common.enums.contests import ContestStatus, ContestVisibility
+from app.common.enums.enrollments import EnrollmentStatus
 from app.schemas.contest import (
     ContestCreate,
     ContestUpdate,
@@ -141,22 +143,21 @@ async def delete_contest(
     contest = await Contest.get(contest_id)
     if not contest:
         raise HTTPException(status_code=404, detail="Contest not found")
-
     active_enrollments = await TeamContestEnrollment.find({
         "contest_id": contest.id,
-        "status": "active",
+        "status": EnrollmentStatus.ACTIVE,
     }).count()
 
-    if active_enrollments and not force:
+    if active_enrollments > 0:
         raise HTTPException(status_code=409, detail="Contest has active enrollments. Use force=true to unenroll and delete.")
 
     if force and active_enrollments:
         # mark all active enrollments removed
         async for enr in TeamContestEnrollment.find({
             "contest_id": contest.id,
-            "status": "active",
+            "status": EnrollmentStatus.ACTIVE,
         }):
-            enr.status = "removed"
+            enr.status = EnrollmentStatus.REMOVED
             enr.removed_at = datetime.utcnow()
             await enr.save()
 
@@ -202,11 +203,19 @@ async def enroll_teams(
             team_id=team.id,
             user_id=team.user_id,
             contest_id=contest.id,
-            status="active",
+            status=EnrollmentStatus.ACTIVE,
             enrolled_at=datetime.utcnow(),
             initial_points=team.total_points,
         )
         await enr.insert()
+        # Persist contest_id on the team for convenience
+        try:
+            team.contest_id = str(contest.id)
+            team.updated_at = datetime.utcnow()
+            await team.save()
+        except Exception:
+            # Do not fail enrollment if team update fails
+            pass
         created.append(
             EnrollmentResponse(
                 id=str(enr.id),
@@ -234,6 +243,9 @@ async def unenroll(
         raise HTTPException(status_code=404, detail="Contest not found")
 
     count = 0
+    # Collect affected team ids to batch-check for remaining active enrollments
+    from typing import Set
+    affected_team_ids: Set[PydanticObjectId] = set()
 
     if body.enrollment_ids:
         for eid in body.enrollment_ids:
@@ -243,6 +255,7 @@ async def unenroll(
                 enr.removed_at = datetime.utcnow()
                 await enr.save()
                 count += 1
+                affected_team_ids.add(enr.team_id)
 
     if body.team_ids:
         for tid in body.team_ids:
@@ -253,12 +266,37 @@ async def unenroll(
             enr = await TeamContestEnrollment.find_one(
                 (TeamContestEnrollment.team_id == toid)
                 & (TeamContestEnrollment.contest_id == contest.id)
-                & (TeamContestEnrollment.status == "active")
+                & (TeamContestEnrollment.status == EnrollmentStatus.ACTIVE)
             )
             if enr:
-                enr.status = "removed"
+                enr.status = EnrollmentStatus.REMOVED
                 enr.removed_at = datetime.utcnow()
                 await enr.save()
                 count += 1
+                affected_team_ids.add(toid)
+
+    # Batch check and clear team.contest_id for teams with no remaining active enrollments
+    if affected_team_ids:
+        try:
+            # Find teams that still have at least one active enrollment for this contest
+            still_active_team_ids: Set[PydanticObjectId] = set()
+            async for active in TeamContestEnrollment.find({
+                "team_id": {"$in": list(affected_team_ids)},
+                "contest_id": contest.id,
+                "status": "active",
+            }):
+                still_active_team_ids.add(active.team_id)
+
+            # Teams to clear = affected - still_active
+            to_clear_ids = [tid for tid in affected_team_ids if tid not in still_active_team_ids]
+            for tid in to_clear_ids:
+                team = await Team.get(tid)
+                if team and team.contest_id is not None:
+                    team.contest_id = None
+                    team.updated_at = datetime.utcnow()
+                    await team.save()
+        except Exception:
+            # Best-effort cleanup; ignore errors
+            pass
 
     return {"unenrolled": count}

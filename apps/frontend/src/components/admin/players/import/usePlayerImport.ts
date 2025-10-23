@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { API_BASE_URL } from "@/config/constants";
+import { API_BASE_URL, AUTH, LS_KEYS } from "@/common/consts";
 
 interface ImportOptions {
   dry_run: boolean;
@@ -79,7 +79,7 @@ export function usePlayerImport(onSuccess?: () => void) {
 
       const response = await fetch(url, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          [AUTH.HEADER]: `${AUTH.BEARER_PREFIX}${localStorage.getItem(LS_KEYS.ACCESS_TOKEN) || ""}`,
         },
       });
 
@@ -118,12 +118,12 @@ export function usePlayerImport(onSuccess?: () => void) {
       formData.append("slot_strategy", options.slot_strategy);
       formData.append("header_row", "1");
 
-      const token = localStorage.getItem("access_token");
+      const token = localStorage.getItem(LS_KEYS.ACCESS_TOKEN);
       const apiUrl = API_BASE_URL;
       const response = await fetch(`${apiUrl}/api/admin/players/import`, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${token}`,
+          [AUTH.HEADER]: `${AUTH.BEARER_PREFIX}${token}`,
         },
         body: formData,
       });

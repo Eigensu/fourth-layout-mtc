@@ -3,12 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { PlayersSection } from "./players/PlayersSection";
+import { TeamsEditSection } from "./players/TeamsEditSection";
 import { SponsorsSection } from "./sponsors/SponsorsSection";
 import { ContestsSection } from "./contests/ContestsSection";
 import { SlotsSection } from "./slots/SlotsSection";
 import { Users, Award, Trophy, Grid3x3, Home } from "lucide-react";
 
-type Section = "players" | "sponsors" | "contests" | "slots";
+type Section = "players" | "sponsors" | "contests" | "slots" | "teamsEdit";
 
 export function AdminLayout() {
   const [activeSection, setActiveSection] = useState<Section>("players");
@@ -19,6 +20,7 @@ export function AdminLayout() {
     { id: "sponsors" as Section, label: "Sponsors", icon: Award },
     { id: "contests" as Section, label: "Contests", icon: Trophy },
     { id: "slots" as Section, label: "Slots", icon: Grid3x3 },
+    { id: "teamsEdit" as Section, label: "Edit by Teams", icon: Users },
   ];
 
   const renderSection = () => {
@@ -31,6 +33,8 @@ export function AdminLayout() {
         return <ContestsSection />;
       case "slots":
         return <SlotsSection />;
+      case "teamsEdit":
+        return <TeamsEditSection />;
       default:
         return <PlayersSection />;
     }

@@ -12,7 +12,7 @@ import {
   renameTeam,
   type TeamResponse,
 } from "@/lib/api/teams";
-import { NEXT_PUBLIC_API_URL } from "@/config/env";
+import { API_BASE_URL, LS_KEYS, ROUTES } from "@/common/consts";
 import { publicContestsApi, type Contest as PublicContest } from "@/lib/api/public/contests";
 
 type ApiPlayer = {
@@ -95,7 +95,7 @@ export default function TeamsPage() {
   useEffect(() => {
     const fetchPlayers = async () => {
       try {
-        const res = await fetch(`${NEXT_PUBLIC_API_URL}/api/players`);
+        const res = await fetch(`${API_BASE_URL}/api/players`);
         if (!res.ok) throw new Error("Failed to load players");
         const data: ApiPlayer[] = await res.json();
         const mapped: Player[] = data.map((p) => ({
@@ -161,16 +161,16 @@ export default function TeamsPage() {
   useEffect(() => {
     const fetchTeams = async () => {
       if (!isAuthenticated) {
-        router.push("/auth/login");
+        router.push(ROUTES.LOGIN);
         return;
       }
 
       try {
         setLoading(true);
         setError(null);
-        const token = localStorage.getItem("access_token");
+        const token = localStorage.getItem(LS_KEYS.ACCESS_TOKEN);
         if (!token) {
-          router.push("/auth/login");
+          router.push(ROUTES.LOGIN);
           return;
         }
 
@@ -284,7 +284,7 @@ export default function TeamsPage() {
 
     try {
       setDeletingTeamId(teamId);
-      const token = localStorage.getItem("access_token");
+      const token = localStorage.getItem(LS_KEYS.ACCESS_TOKEN);
       if (!token) throw new Error("Not authenticated");
 
       await deleteTeam(teamId, token);

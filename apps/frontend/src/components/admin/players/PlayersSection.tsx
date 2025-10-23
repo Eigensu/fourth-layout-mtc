@@ -7,6 +7,9 @@ import { PlayerImport } from "./import/PlayerImport";
 import { PlayerTableRow } from "./PlayerTableRow";
 import { Pagination } from "./Pagination";
 import { usePlayersSection } from "./usePlayersSection";
+import { useState } from "react";
+import { EditPointsModal } from "./EditPointsModal";
+import type { Player } from "@/lib/api/admin/players";
 
 export function PlayersSection() {
   const {
@@ -28,7 +31,11 @@ export function PlayersSection() {
     openImport,
     closeImport,
     handleImportSuccess,
+    refresh,
   } = usePlayersSection();
+
+  const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
+  const closeEdit = () => setEditingPlayer(null);
 
   return (
     <div className="space-y-4">
@@ -121,6 +128,7 @@ export function PlayersSection() {
                         player={player}
                         slotMap={slotMap}
                         onDelete={handleDelete}
+                        onEditPoints={(p) => setEditingPlayer(p)}
                       />
                     ))}
                   </tbody>
@@ -152,6 +160,15 @@ export function PlayersSection() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Edit Points Modal */}
+      {editingPlayer && (
+        <EditPointsModal
+          player={editingPlayer}
+          onClose={closeEdit}
+          onSaved={refresh}
+        />
       )}
     </div>
   );

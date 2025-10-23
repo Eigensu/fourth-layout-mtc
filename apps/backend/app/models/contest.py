@@ -1,7 +1,8 @@
 from beanie import Document, Indexed
 from pydantic import Field
 from datetime import datetime
-from typing import Literal, Optional
+from typing import Optional
+from app.common.enums.contests import ContestStatus, ContestVisibility, PointsScope
 
 
 class Contest(Document):
@@ -20,11 +21,11 @@ class Contest(Document):
     end_at: datetime
 
     # lifecycle and visibility
-    status: Literal["draft", "active", "paused", "completed", "archived"] = "draft"
-    visibility: Literal["public", "private"] = "public"
+    status: ContestStatus = ContestStatus.DRAFT
+    visibility: ContestVisibility = ContestVisibility.PUBLIC
 
     # points calculation mode (phase 1 uses baseline; ledger can come later)
-    points_scope: Literal["time_window", "snapshot"] = "time_window"
+    points_scope: PointsScope = PointsScope.TIME_WINDOW
 
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)

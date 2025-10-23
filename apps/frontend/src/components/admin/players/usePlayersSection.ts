@@ -133,5 +133,7 @@ export function usePlayersSection() {
     openImport,
     closeImport,
     handleImportSuccess,
+    // Refresh
+    refresh: fetchPlayers,
   };
 }

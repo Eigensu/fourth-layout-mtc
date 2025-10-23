@@ -1,7 +1,8 @@
 from beanie import Document, Indexed, PydanticObjectId
 from pydantic import Field
 from datetime import datetime
-from typing import Literal, Optional
+from typing import Optional
+from app.common.enums.enrollments import EnrollmentStatus
 
 
 class TeamContestEnrollment(Document):
@@ -11,7 +12,7 @@ class TeamContestEnrollment(Document):
     user_id: PydanticObjectId  # denormalized for faster queries
     contest_id: PydanticObjectId
 
-    status: Literal["active", "removed"] = "active"
+    status: EnrollmentStatus = EnrollmentStatus.ACTIVE
     enrolled_at: datetime = Field(default_factory=datetime.utcnow)
     removed_at: Optional[datetime] = None
 

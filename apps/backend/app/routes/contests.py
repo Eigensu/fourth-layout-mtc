@@ -4,6 +4,7 @@ from beanie import PydanticObjectId
 from beanie.operators import Or, RegEx
 from datetime import datetime
 from pydantic import BaseModel
+from bson import ObjectId
 
 from app.models.contest import Contest
 from app.models.team_contest_enrollment import TeamContestEnrollment
@@ -14,6 +15,8 @@ from app.schemas.contest import ContestListResponse, ContestResponse
 from app.schemas.leaderboard import LeaderboardResponseSchema, LeaderboardEntrySchema
 from app.utils.dependencies import get_current_active_user
 from app.schemas.enrollment import EnrollmentResponse
+from app.common.enums.contests import ContestVisibility
+from app.common.enums.enrollments import EnrollmentStatus
 
 router = APIRouter(prefix="/api/contests", tags=["contests"])
 
@@ -37,18 +40,18 @@ async def to_contest_response(contest: Contest) -> ContestResponse:
 async def get_optional_current_user(authorization: Optional[str] = Header(None)) -> Optional[User]:
     if not authorization or not authorization.startswith("Bearer "):
         return None
+    token = authorization.replace("Bearer ", "")
     try:
-        token = authorization.replace("Bearer ", "")
         payload = decode_token(token)
-        if payload is None:
-            return None
-        username = payload.get("sub")
-        if not username or not isinstance(username, str):
-            return None
-        user = await User.find_one(User.username == username)
-        return user
     except Exception:
         return None
+    if payload is None:
+        return None
+    username = payload.get("sub")
+    if not username or not isinstance(username, str):
+        return None
+    user = await User.find_one(User.username == username)
+    return user
 
 
 @router.get("", response_model=ContestListResponse)
@@ -58,7 +61,7 @@ async def list_public_contests(
     status: Optional[str] = Query(None),
     q: Optional[str] = Query(None),
 ):
-    conditions = [Contest.visibility == "public"]
+    conditions = [Contest.visibility == ContestVisibility.PUBLIC]
     if status:
         conditions.append(Contest.status == status)
 
@@ -110,7 +113,7 @@ async def list_my_enrollments(current_user: User = Depends(get_current_active_us
 @router.get("/{contest_id}", response_model=ContestResponse)
 async def get_public_contest(contest_id: str):
     contest = await Contest.get(contest_id)
-    if not contest or contest.visibility != "public":
+    if not contest or contest.visibility != ContestVisibility.PUBLIC:
         raise HTTPException(status_code=404, detail="Contest not found")
     return await to_contest_response(contest)
 
@@ -121,13 +124,13 @@ async def get_contest_if_enrolled(contest_id: str, current_user: User = Depends(
     contest = await Contest.get(contest_id)
     if not contest:
         raise HTTPException(status_code=404, detail="Contest not found")
-    if contest.visibility == "public":
+    if contest.visibility == ContestVisibility.PUBLIC:
         return await to_contest_response(contest)
     # Check enrollment for private contests
     enr = await TeamContestEnrollment.find_one({
         "contest_id": contest.id,
         "user_id": current_user.id,
-        "status": "active",
+        "status": EnrollmentStatus.ACTIVE,
     })
     if not enr:
         raise HTTPException(status_code=404, detail="Contest not found")
@@ -142,13 +145,13 @@ async def contest_leaderboard(
     current_user: Optional[User] = Depends(get_optional_current_user),
 ):
     contest = await Contest.get(contest_id)
-    if not contest or contest.visibility != "public":
+    if not contest or contest.visibility != ContestVisibility.PUBLIC:
         raise HTTPException(status_code=404, detail="Contest not found")
 
     # fetch active enrollments
     enrollments = await TeamContestEnrollment.find({
         "contest_id": contest.id,
-        "status": "active",
+        "status": EnrollmentStatus.ACTIVE,
     }).to_list()
 
     if not enrollments:
@@ -239,11 +242,10 @@ async def enroll_in_contest(
     if contest.status in ("completed", "archived"):
         raise HTTPException(status_code=400, detail="Contest is not open for enrollment")
 
-    # validate team ownership
-    try:
-        tid = PydanticObjectId(body.team_id)
-    except Exception:
+    # validate team ownership (avoid exceptions for validation)
+    if not ObjectId.is_valid(body.team_id):
         raise HTTPException(status_code=400, detail="Invalid team id")
+    tid = PydanticObjectId(body.team_id)
 
     team = await Team.get(tid)
     if not team or team.user_id != current_user.id:
@@ -253,7 +255,7 @@ async def enroll_in_contest(
     existing = await TeamContestEnrollment.find_one({
         "team_id": team.id,
         "contest_id": contest.id,
-        "status": "active",
+        "status": EnrollmentStatus.ACTIVE,
     })
     if existing:
         return EnrollmentResponse(
@@ -271,7 +273,7 @@ async def enroll_in_contest(
         team_id=team.id,
         contest_id=contest.id,
         user_id=current_user.id,
-        status="active",
+        status=EnrollmentStatus.ACTIVE,
         enrolled_at=datetime.utcnow(),
         initial_points=team.total_points,
     )

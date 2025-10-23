@@ -49,6 +49,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${inter.variable} ${poppins.variable} ${jetbrainsMono.variable}`}
     >
       <body className={`${inter.className} antialiased`}>

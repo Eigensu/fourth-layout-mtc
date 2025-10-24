@@ -2,7 +2,7 @@
 
 import { Card, CardBody } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { Search, Plus, Loader2, AlertCircle, Upload } from "lucide-react";
+import { Search, Plus, Loader2, AlertCircle, Upload, X } from "lucide-react";
 import { PlayerImport } from "./import/PlayerImport";
 import { PlayerTableRow } from "./PlayerTableRow";
 import { Pagination } from "./Pagination";
@@ -44,28 +44,32 @@ export function PlayersSection() {
         <CardBody className="p-4">
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
             <div className="flex-1 w-full sm:w-auto">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <label htmlFor="players-search" className="sr-only">
+                Search players
+              </label>
+              <div className="relative flex items-center rounded-xl border border-gray-200 bg-white/70 px-3 py-2 shadow-sm backdrop-blur focus-within:ring-2 focus-within:ring-orange-500">
+                <Search className="text-gray-400 w-5 h-5" />
                 <input
-                  type="text"
+                  id="players-search"
+                  type="search"
                   placeholder="Search players..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full bg-transparent outline-none pl-2 pr-8 text-sm placeholder:text-gray-400"
                 />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery("")}
+                    aria-label="Clear search"
+                    className="absolute right-2 p-1 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
               </div>
             </div>
             <div className="flex gap-2 w-full sm:w-auto flex-wrap">
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
-              >
-                <option value="">All Status</option>
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
-                <option value="Injured">Injured</option>
-              </select>
               <Button variant="secondary" size="sm" onClick={openImport}>
                 <Upload className="w-4 h-4 mr-2" />
                 Import

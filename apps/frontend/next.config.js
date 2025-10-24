@@ -41,8 +41,7 @@ const nextConfig = {
   },
   // Disable Next.js dev activity indicator (logo/watermark)
   devIndicators: {
-    buildActivity: false,
-    buildActivityPosition: 'bottom-right',
+    position: "bottom-right",
   },
 };
 

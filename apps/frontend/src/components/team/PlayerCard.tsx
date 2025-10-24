@@ -27,6 +27,7 @@ interface PlayerCardProps {
   onSelect: (playerId: string) => void;
   onSetCaptain?: (playerId: string) => void;
   onSetViceCaptain?: (playerId: string) => void;
+  onReplace?: (playerId: string) => void;
   showActions?: boolean;
   compact?: boolean;
   className?: string;
@@ -42,6 +43,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
   onSelect,
   onSetCaptain,
   onSetViceCaptain,
+  onReplace,
   showActions = false,
   compact = false,
   className = "",
@@ -249,6 +251,17 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
         {/* Action Buttons */}
         {showActions && isSelected && (
           <div className="flex space-x-2 mt-4 pt-3 border-t border-gray-100">
+            {onReplace && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onReplace(player.id);
+                }}
+                className="flex-1 px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100"
+              >
+                Replace
+              </button>
+            )}
             {onSetCaptain && !isCaptain && (
               <button
                 onClick={(e) => {

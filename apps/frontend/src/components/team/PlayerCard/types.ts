@@ -22,6 +22,7 @@ export interface PlayerCardProps {
   onSelect: (playerId: string) => void;
   onSetCaptain?: (playerId: string) => void;
   onSetViceCaptain?: (playerId: string) => void;
+  onReplace?: (playerId: string) => void;
   showActions?: boolean;
   compact?: boolean;
   className?: string;

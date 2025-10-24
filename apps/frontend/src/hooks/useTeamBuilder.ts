@@ -192,6 +192,9 @@ export function useTeamBuilder() {
     isFirstSlot,
 
     // setters/handlers
+    setSelectedPlayers,
+    setCaptainId,
+    setViceCaptainId,
     setCurrentStep,
     setIsStep1Collapsed,
     setActiveSlotId,

@@ -67,23 +67,40 @@ export function AdminLayout() {
 
       {/* Navigation Tabs */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="flex space-x-2 overflow-x-auto scrollbar-hide">
-            {sections.map(({ id, label, icon: Icon }) => (
-              <button
-                key={id}
-                onClick={() => setActiveSection(id)}
-                className={`flex items-center gap-2 py-4 px-4 border-b-2 font-medium text-sm whitespace-nowrap transition-all ${
-                  activeSection === id
-                    ? "border-orange-500 text-orange-600 bg-orange-50"
-                    : "border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                }`}
-              >
-                <Icon className="w-5 h-5" />
-                {label}
-              </button>
-            ))}
-          </nav>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+          {/* Segmented control */}
+          <div className="relative overflow-x-auto">
+            <div
+              role="tablist"
+              aria-label="Admin sections"
+              className="flex items-center gap-2 rounded-xl bg-gray-50/80 p-1 border border-gray-200 shadow-inner backdrop-blur supports-[backdrop-filter]:bg-gray-50/60"
+            >
+              {sections.map(({ id, label, icon: Icon }) => {
+                const isActive = activeSection === id;
+                return (
+                  <button
+                    key={id}
+                    role="tab"
+                    aria-selected={isActive}
+                    aria-controls={`panel-${id}`}
+                    onClick={() => setActiveSection(id)}
+                    className={`group flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${
+                      isActive
+                        ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow"
+                        : "text-gray-700 hover:text-gray-900 hover:bg-white"
+                    }`}
+                  >
+                    <Icon
+                      className={`w-4 h-4 transition-colors ${
+                        isActive ? "text-white" : "text-gray-500 group-hover:text-gray-700"
+                      }`}
+                    />
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
 

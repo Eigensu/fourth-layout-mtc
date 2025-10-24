@@ -1,27 +1,26 @@
-import { Sponsor, SponsorsResponse, SponsorDetailResponse, SponsorFilters } from "@/types/sponsor";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+import { API_V1_BASE } from "@/config/constants";
+import { Sponsor, SponsorsResponse, SponsorFilters } from "@/types/sponsor";
+import { buildApiUrl } from "@/common/utils/url";
 
 /**
  * Fetch all sponsors with optional filters
  * This is prepared for backend integration
  */
-export async function getSponsors(filters?: SponsorFilters): Promise<Sponsor[]> {
+export async function getSponsors(
+  filters?: SponsorFilters
+): Promise<Sponsor[]> {
   try {
-    const queryParams = new URLSearchParams();
-    
-    if (filters?.tier && filters.tier !== "all") {
-      queryParams.append("tier", filters.tier);
-    }
-    if (filters?.featured !== undefined) {
-      queryParams.append("featured", String(filters.featured));
-    }
-    if (filters?.active !== undefined) {
-      queryParams.append("active", String(filters.active));
-    }
+    const url = buildApiUrl(
+      API_V1_BASE,
+      "/sponsors",
+      {
+        tier: filters?.tier && filters.tier !== "all" ? filters.tier : undefined,
+        featured: filters?.featured,
+        active: filters?.active,
+      },
+      { trailingSlash: true }
+    );
 
-    const url = `${API_BASE_URL}/sponsors${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
-    
     const response = await fetch(url, {
       method: "GET",
       headers: {
@@ -35,7 +34,24 @@ export async function getSponsors(filters?: SponsorFilters): Promise<Sponsor[]> 
       throw new Error(`Failed to fetch sponsors: ${response.statusText}`);
     }
 
-    const data: SponsorsResponse = await response.json();
+    const raw = await response.json();
+    // Normalize potential snake_case keys and _id into our Sponsor type
+    const data: SponsorsResponse = {
+      sponsors: (raw.sponsors || []).map((s: any) => ({
+        id: s.id ?? s._id,
+        name: s.name,
+        logo: s.logo,
+        tier: s.tier,
+        description: s.description,
+        website: s.website,
+        featured: s.featured,
+        active: s.active,
+        createdAt: s.createdAt ?? s.created_at,
+        updatedAt: s.updatedAt ?? s.updated_at,
+      })),
+      total: raw.total ?? (raw.sponsors ? raw.sponsors.length : 0),
+    } as SponsorsResponse;
+
     return data.sponsors;
   } catch (error) {
     console.error("Error fetching sponsors:", error);
@@ -48,7 +64,7 @@ export async function getSponsors(filters?: SponsorFilters): Promise<Sponsor[]> 
  */
 export async function getSponsorById(id: string): Promise<Sponsor> {
   try {
-    const response = await fetch(`${API_BASE_URL}/sponsors/${id}`, {
+    const response = await fetch(`${API_V1_BASE}/sponsors/${id}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -59,8 +75,21 @@ export async function getSponsorById(id: string): Promise<Sponsor> {
       throw new Error(`Failed to fetch sponsor: ${response.statusText}`);
     }
 
-    const data: SponsorDetailResponse = await response.json();
-    return data.sponsor;
+    const raw = await response.json();
+    const s = raw.sponsor ?? raw;
+    const sponsor: Sponsor = {
+      id: s.id ?? s._id,
+      name: s.name,
+      logo: s.logo,
+      tier: s.tier,
+      description: s.description,
+      website: s.website,
+      featured: s.featured,
+      active: s.active,
+      createdAt: s.createdAt ?? s.created_at,
+      updatedAt: s.updatedAt ?? s.updated_at,
+    };
+    return sponsor;
   } catch (error) {
     console.error("Error fetching sponsor:", error);
     throw error;

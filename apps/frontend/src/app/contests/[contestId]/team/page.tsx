@@ -7,7 +7,7 @@ import type { Player } from "@/components";
 import { MobileUserMenu } from "@/components/navigation/MobileUserMenu";
 import { useAuth } from "@/contexts/AuthContext";
 import { LS_KEYS, ROUTES } from "@/common/consts";
-import { createTeam, getUserTeams, getTeam, type TeamResponse } from "@/lib/api/teams";
+import { createTeam, getUserTeams, getTeam, updateTeam, type TeamResponse } from "@/lib/api/teams";
 import { publicContestsApi, type EnrollmentResponse } from "@/lib/api/public/contests";
 import { useTeamBuilder } from "@/hooks/useTeamBuilder";
 
@@ -41,6 +41,9 @@ export default function ContestTeamBuilderPage() {
     isFirstSlot,
 
     // handlers
+    setSelectedPlayers,
+    setCaptainId,
+    setViceCaptainId,
     setCurrentStep,
     setIsStep1Collapsed,
     setActiveSlotId,
@@ -64,9 +67,14 @@ export default function ContestTeamBuilderPage() {
   const [loadingEnrollment, setLoadingEnrollment] = useState(false);
   const [enrollment, setEnrollment] = useState<EnrollmentResponse | null>(null);
 
-  // View-only state if a team already exists for this contest
+  // Existing team (enable edit mode when exists)
   const [existingTeam, setExistingTeam] = useState<TeamResponse | null>(null);
   const [loadingTeam, setLoadingTeam] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+
+  // Replace player modal state
+  const [showReplace, setShowReplace] = useState(false);
+  const [replaceTargetId, setReplaceTargetId] = useState<string>("");
 
   useEffect(() => {
     if (!contestId) return;
@@ -128,6 +136,32 @@ export default function ContestTeamBuilderPage() {
 
   const roleToSlotLabel = (role: string): string => role;
 
+  // When an existing team is found, keep the page minimal (no edit pre-fill)
+  useEffect(() => {
+    if (!existingTeam) return;
+    setEditMode(false);
+    setTeamName(existingTeam.team_name || "");
+  }, [existingTeam]);
+
+  // Replace player handlers
+  const openReplace = (playerId: string) => {
+    setReplaceTargetId(playerId);
+    setShowReplace(true);
+  };
+
+  const confirmReplace = (newPlayerId: string) => {
+    setSelectedPlayers((prev) => prev.map((id) => (id === replaceTargetId ? newPlayerId : id)));
+    // Transfer captain/VC if target had it
+    setCaptainId((c) => (c === replaceTargetId ? newPlayerId : c));
+    setViceCaptainId((v) => (v === replaceTargetId ? newPlayerId : v));
+    setShowReplace(false);
+    setReplaceTargetId("");
+  };
+  const closeReplace = () => {
+    setShowReplace(false);
+    setReplaceTargetId("");
+  };
+
   const getRoleAvatarGradient = (role: string) => {
     const r = role.toLowerCase();
     if (r === "batsman" || r === "batsmen") return "bg-gradient-to-br from-amber-400 to-yellow-600";
@@ -166,20 +200,21 @@ export default function ContestTeamBuilderPage() {
         vice_captain_id: viceCaptainId,
         contest_id: selectedContestId || undefined,
       };
-
-      const created = await createTeam(teamData, token);
-
-      // Enroll in the current contest
-      if (selectedContestId) {
-        try {
-          await publicContestsApi.enroll(selectedContestId, created.id);
-        } catch (e: any) {
-          alert(e?.response?.data?.detail || e?.message || "Failed to enroll in contest");
+      if (editMode && existingTeam) {
+        // Update existing team
+        await updateTeam(existingTeam.id, teamData, token);
+        alert("Team updated successfully");
+      } else {
+        const created = await createTeam(teamData, token);
+        if (selectedContestId) {
+          try {
+            await publicContestsApi.enroll(selectedContestId, created.id);
+          } catch (e: any) {
+            alert(e?.response?.data?.detail || e?.message || "Failed to enroll in contest");
+          }
         }
+        router.push(`/contests/${contestId}/leaderboard`);
       }
-
-      // Redirect to this contest's leaderboard
-      router.push(`/contests/${contestId}/leaderboard`);
     } catch (err: any) {
       console.error("Failed to submit team:", err);
       alert(err.message || "Failed to submit team");
@@ -188,7 +223,7 @@ export default function ContestTeamBuilderPage() {
     }
   };
 
-  // If a team exists for this contest, show a read-only view
+  // If a team exists show minimal view instead of builder
   const showViewOnly = !!existingTeam;
 
   return (
@@ -217,37 +252,16 @@ export default function ContestTeamBuilderPage() {
               {loadingTeam ? (
                 <div className="text-gray-500">Loading your team...</div>
               ) : existingTeam ? (
-                <Card className="p-6">
-                  <div className="mb-4">
+                <Card className="p-6 flex items-center justify-between">
+                  <div>
                     <div className="text-sm text-gray-500">Team Name</div>
                     <div className="text-lg font-semibold text-gray-900">{existingTeam.team_name}</div>
+                    <div className="text-sm text-gray-600 mt-1">Total Points: <span className="font-semibold text-success-700">{Math.floor(existingTeam.total_points)}</span></div>
                   </div>
-                  <div className="space-y-3">
-                    {players
-                      .filter((p) => existingTeam.player_ids.includes(p.id))
-                      .map((player: Player) => (
-                        <div key={player.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                          <div className="flex items-center space-x-3">
-                            <Avatar name={player.name} size="sm" gradientClassName={getRoleAvatarGradient(player.role)} />
-                            <div>
-                              <div className="font-medium text-gray-900">
-                                {player.name}
-                                {existingTeam.captain_id === player.id && (
-                                  <Badge variant="warning" size="sm" className="ml-2">Captain</Badge>
-                                )}
-                                {existingTeam.vice_captain_id === player.id && (
-                                  <Badge variant="secondary" size="sm" className="ml-2">Vice-Captain</Badge>
-                                )}
-                              </div>
-                              <div className="text-sm text-gray-500">{roleToSlotLabel(player.role)} • {player.team}</div>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <div className="font-medium text-success-600">{player.points} pts</div>
-                            <div className="text-sm text-gray-500">₹{Math.floor(player.price)}</div>
-                          </div>
-                        </div>
-                      ))}
+                  <div className="flex gap-2">
+                    <Button variant="primary" onClick={() => router.push(`/teams?contest_id=${encodeURIComponent(String(contestId || ""))}`)}>
+                      View Details
+                    </Button>
                   </div>
                 </Card>
               ) : (
@@ -428,6 +442,7 @@ export default function ContestTeamBuilderPage() {
                             onSelect={() => {}}
                             onSetCaptain={handleSetCaptain}
                             onSetViceCaptain={handleSetViceCaptain}
+                            onReplace={openReplace}
                             showActions={true}
                             displayRoleMap={roleToSlotLabel}
                           />
@@ -526,10 +541,57 @@ export default function ContestTeamBuilderPage() {
             )}
           </StepCard>
 
+          {/* Replace Modal */}
+          {showReplace && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+              <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl">
+                <div className="flex items-center justify-between px-5 py-3 border-b">
+                  <h3 className="font-semibold text-gray-900">Replace Player</h3>
+                  <button onClick={closeReplace} className="text-gray-500 hover:text-gray-700">✕</button>
+                </div>
+                <div className="p-5 max-h-[70vh] overflow-y-auto space-y-3">
+                  {(() => {
+                    const target = players.find((p) => p.id === replaceTargetId);
+                    const slotId = target?.slotId;
+                    const candidates = players.filter((p) => p.slotId === slotId && !selectedPlayers.includes(p.id));
+                    if (!target) return <div className="text-gray-500">No player selected.</div>;
+                    return (
+                      <div className="space-y-2">
+                        <div className="text-sm text-gray-600">Replacing <span className="font-medium text-gray-900">{target.name}</span>. Choose a replacement from the same slot.</div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {candidates.map((p) => (
+                            <button
+                              key={p.id}
+                              onClick={() => confirmReplace(p.id)}
+                              className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 text-left"
+                            >
+                              <Avatar name={p.name} size="sm" />
+                              <div className="flex-1">
+                                <div className="font-medium text-gray-900">{p.name}</div>
+                                <div className="text-xs text-gray-500">{roleToSlotLabel(p.role)} • {p.team}</div>
+                              </div>
+                              <div className="text-right text-sm text-success-600">{Math.floor(p.points)} pts</div>
+                            </button>
+                          ))}
+                          {candidates.length === 0 && (
+                            <div className="text-sm text-gray-500">No available players in this slot.</div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+                <div className="px-5 py-3 border-t flex justify-end">
+                  <Button variant="ghost" onClick={closeReplace}>Close</Button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Global Submit */}
           <div className="flex justify-center mt-6">
             <Button variant="primary" size="lg" className="shadow-glow" disabled={currentStep !== 3 || submitting} onClick={handleSubmitTeam}>
-              {submitting ? "Submitting..." : "Submit Team"}
+              {submitting ? (editMode ? "Saving..." : "Submitting...") : (editMode ? "Save Changes" : "Submit Team")}
             </Button>
           </div>
             </>

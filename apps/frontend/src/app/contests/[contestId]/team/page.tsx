@@ -53,7 +53,7 @@ export default function ContestTeamBuilderPage() {
     handleSetViceCaptain,
     goToNextSlot,
     goToPrevSlot,
-  } = useTeamBuilder();
+  } = useTeamBuilder(typeof contestId === 'string' ? contestId : undefined);
 
   // Team submission states
   const [submitting, setSubmitting] = useState(false);

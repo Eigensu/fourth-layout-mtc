@@ -11,8 +11,11 @@ export type ApiPlayer = {
   image_url?: string | null;
 };
 
-export async function fetchPlayersBySlot(slotId: string): Promise<ApiPlayer[]> {
-  const res = await fetch(`${NEXT_PUBLIC_API_URL}/api/players?slot=${slotId}`);
+export async function fetchPlayersBySlot(slotId: string, contestId?: string): Promise<ApiPlayer[]> {
+  const q = new URLSearchParams();
+  q.set("slot", String(slotId));
+  if (contestId) q.set("contest_id", String(contestId));
+  const res = await fetch(`${NEXT_PUBLIC_API_URL}/api/players?${q.toString()}`);
   if (!res.ok) throw new Error(`Failed to load players for slot ${slotId} (${res.status})`);
   return (await res.json()) as ApiPlayer[];
 }

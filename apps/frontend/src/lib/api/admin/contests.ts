@@ -3,6 +3,7 @@ import apiClient from '../client';
 export type ContestStatus = 'draft' | 'active' | 'paused' | 'completed' | 'archived';
 export type ContestVisibility = 'public' | 'private';
 export type PointsScope = 'time_window' | 'snapshot';
+export type ContestType = 'daily' | 'full';
 
 export interface Contest {
   id: string;
@@ -14,6 +15,8 @@ export interface Contest {
   status: ContestStatus;
   visibility: ContestVisibility;
   points_scope: PointsScope;
+  contest_type: ContestType;
+  allowed_teams: string[];
   created_at: string;
   updated_at: string;
 }
@@ -34,6 +37,8 @@ export interface ContestCreate {
   status?: ContestStatus;
   visibility?: ContestVisibility;
   points_scope?: PointsScope;
+  contest_type?: ContestType;
+  allowed_teams?: string[];
 }
 
 export interface ContestUpdate {
@@ -44,6 +49,8 @@ export interface ContestUpdate {
   status?: ContestStatus;
   visibility?: ContestVisibility;
   points_scope?: PointsScope;
+  contest_type?: ContestType;
+  allowed_teams?: string[];
 }
 
 export interface EnrollmentBulkRequest { team_ids: string[] }

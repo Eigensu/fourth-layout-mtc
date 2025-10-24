@@ -5,7 +5,7 @@ import { fetchPlayersBySlot, type ApiPlayer } from "@/lib/api/public/players";
 
 export type UIBuildPlayer = Player & { slotId: string };
 
-export function useTeamBuilder() {
+export function useTeamBuilder(contestId?: string) {
   const [players, setPlayers] = useState<UIBuildPlayer[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +28,7 @@ export function useTeamBuilder() {
     return map;
   }, [slots]);
 
-  // Fetch slots and players by slot (run once on mount)
+  // Fetch slots and players by slot (on mount and when contestId changes)
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -64,7 +64,7 @@ export function useTeamBuilder() {
         const playerArrays = await Promise.all(
           sortedSlots.map(async (s) => {
             try {
-              const arr: ApiPlayer[] = await fetchPlayersBySlot(s.id);
+              const arr: ApiPlayer[] = await fetchPlayersBySlot(s.id, contestId);
               return arr.map((p) => ({ ...p, slot: p.slot || s.id }));
             } catch {
               return [] as ApiPlayer[];
@@ -93,7 +93,7 @@ export function useTeamBuilder() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [contestId]);
 
   const selectedCountBySlot = useMemo(() => {
     const counts: Record<string, number> = {};

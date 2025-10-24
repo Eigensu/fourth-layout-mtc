@@ -103,11 +103,14 @@ export default function TeamsPage() {
     return undefined;
   };
 
-  // Fetch players
+  // Fetch players (respect contest_id to filter allowed teams for daily contests)
   useEffect(() => {
     const fetchPlayers = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/players`);
+        const url = contestIdParam
+          ? `${API_BASE_URL}/api/players?contest_id=${encodeURIComponent(contestIdParam)}`
+          : `${API_BASE_URL}/api/players`;
+        const res = await fetch(url);
         if (!res.ok) throw new Error("Failed to load players");
         const data: ApiPlayer[] = await res.json();
         const mapped: Player[] = data.map((p) => ({
@@ -123,7 +126,7 @@ export default function TeamsPage() {
     };
 
     fetchPlayers();
-  }, []);
+  }, [contestIdParam]);
 
   // Load per-team enrollments and resolve contest names
   useEffect(() => {
@@ -199,15 +202,20 @@ export default function TeamsPage() {
     fetchTeams();
   }, [isAuthenticated, router]);
 
-  // When contest_id is present, fetch contest-relative team/players points per team
+  // When contest_id is present, fetch contest-relative team/players points for ENROLLED teams only
   useEffect(() => {
     let mounted = true;
     const loadContestTeams = async () => {
       if (!contestIdParam || teams.length === 0) return;
       try {
         const results: Record<string, ContestTeamResponse> = {};
+        // Filter to teams enrolled in this contest to avoid 404s
+        const enrolledTeamIds = Object.entries(enrollmentByTeam)
+          .filter(([_, v]) => v?.contestId === contestIdParam)
+          .map(([tid]) => tid);
+        const targetTeams = teams.filter((t) => enrolledTeamIds.includes(t.id));
         // Fetch sequentially to avoid API burst; can parallelize later if needed
-        for (const t of teams) {
+        for (const t of targetTeams) {
           try {
             const data = await publicContestsApi.teamInContest(contestIdParam, t.id);
             results[t.id] = data;
@@ -225,7 +233,7 @@ export default function TeamsPage() {
     return () => {
       mounted = false;
     };
-  }, [contestIdParam, teams]);
+  }, [contestIdParam, teams, enrollmentByTeam]);
 
   // Fetch public contests (open ones)
   useEffect(() => {

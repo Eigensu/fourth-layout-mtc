@@ -133,7 +133,7 @@ export default function AdminManageContestPage() {
         {contest && (
           <div className="border rounded p-4">
             <div className="text-xl font-medium">{contest.name}</div>
-            <div className="text-sm text-gray-600">{contest.code} · {contest.status} · {contest.visibility}</div>
+            <div className="text-sm text-gray-600">{contest.code} · {contest.status} · {contest.visibility} · {contest.contest_type}</div>
             <div className="mt-2">
               <button
                 className={`px-3 py-1 rounded border text-sm ${contest.status === 'active' ? 'text-red-700 border-red-300' : 'text-green-700 border-green-300'}`}
@@ -146,6 +146,12 @@ export default function AdminManageContestPage() {
             </div>
             <div className="text-sm text-gray-700 mt-1">{new Date(contest.start_at).toLocaleString()} – {new Date(contest.end_at).toLocaleString()}</div>
             {contest.description && <p className="mt-2 text-gray-700">{contest.description}</p>}
+            {contest.contest_type === 'daily' && (
+              <div className="mt-2 text-sm text-gray-700">
+                <div className="font-medium">Allowed Teams</div>
+                <div className="text-gray-700">{(contest.allowed_teams || []).length > 0 ? contest.allowed_teams.join(', ') : 'None'}</div>
+              </div>
+            )}
           </div>
         )}
 

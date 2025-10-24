@@ -50,6 +50,25 @@ export interface EnrollmentResponse {
   initial_points: number;
 }
 
+export interface ContestTeamPlayer {
+  id: string;
+  name: string;
+  team?: string | null;
+  role?: string | null;
+  price: number;
+  base_points: number;
+  contest_points: number;
+}
+
+export interface ContestTeamResponse {
+  team_id: string;
+  team_name: string;
+  contest_id: string;
+  base_points: number;
+  contest_points: number;
+  players: ContestTeamPlayer[];
+}
+
 export const publicContestsApi = {
   list: async (params?: { page?: number; page_size?: number; status?: ContestStatus; q?: string }): Promise<ContestListResponse> => {
     const response = await apiClient.get('/api/contests', { params });
@@ -73,6 +92,10 @@ export const publicContestsApi = {
   },
   myEnrollments: async (): Promise<EnrollmentResponse[]> => {
     const response = await apiClient.get(`/api/contests/enrollments/me`);
+    return response.data;
+  },
+  teamInContest: async (contestId: string, teamId: string): Promise<ContestTeamResponse> => {
+    const response = await apiClient.get(`/api/contests/${contestId}/teams/${teamId}`);
     return response.data;
   },
 };

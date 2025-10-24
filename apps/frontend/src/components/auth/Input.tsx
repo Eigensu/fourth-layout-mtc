@@ -1,13 +1,13 @@
 "use client";
 
 import React, { forwardRef, useState } from "react";
-import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, Phone } from "lucide-react";
 
 export interface InputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
-  icon?: "email" | "password" | "user";
+  icon?: "email" | "password" | "user" | "phone";
   variant?: "dark" | "light";
 }
 
@@ -24,7 +24,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           ? Lock
           : icon === "user"
             ? User
-            : null;
+            : icon === "phone"
+              ? Phone
+              : null;
 
     return (
       <div className="w-full">

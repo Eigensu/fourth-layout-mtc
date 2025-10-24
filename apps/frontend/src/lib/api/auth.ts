@@ -12,6 +12,7 @@ export const authApi = {
     form.append('email', credentials.email);
     form.append('password', credentials.password);
     if (credentials.full_name) form.append('full_name', credentials.full_name);
+    if (credentials.mobile) form.append('mobile', credentials.mobile);
     if (credentials.avatar) form.append('avatar', credentials.avatar);
 
     const response = await apiClient.post<AuthTokens>(

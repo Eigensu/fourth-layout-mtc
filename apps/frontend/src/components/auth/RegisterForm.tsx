@@ -23,6 +23,13 @@ const registerSchema = z
         "Username can only contain letters, numbers, underscores, and hyphens"
       ),
     email: z.string().email("Please enter a valid email address"),
+    mobile: z
+      .string({ required_error: "Mobile number is required" })
+      .trim()
+      .refine((v) => {
+        const digits = v.replace(/\D/g, "");
+        return digits.length >= 10 && digits.length <= 15;
+      }, "Enter a valid mobile number (10-15 digits)"),
     full_name: z.string().min(1, "Full name is required").optional(),
     password: z
       .string()
@@ -122,6 +129,19 @@ export function RegisterForm() {
             disabled={isLoading}
             variant="light"
             className="rounded-2xl"
+          />
+
+          <Input
+            {...register("mobile")}
+            type="tel"
+            placeholder="Enter your mobile number"
+            icon="phone"
+            error={errors.mobile?.message}
+            disabled={isLoading}
+            variant="light"
+            className="rounded-2xl"
+            inputMode="tel"
+            autoComplete="tel"
           />
 
           {/* Avatar upload */}

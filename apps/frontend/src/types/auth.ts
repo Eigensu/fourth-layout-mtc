@@ -3,6 +3,7 @@ export interface User {
   username: string;
   email: string;
   full_name: string | null;
+  mobile: string | null;
   is_active: boolean;
   is_verified: boolean;
   created_at: string;
@@ -19,6 +20,7 @@ export interface RegisterCredentials {
   email: string;
   password: string;
   full_name?: string;
+  mobile?: string;
   avatar?: File | null;
 }
 

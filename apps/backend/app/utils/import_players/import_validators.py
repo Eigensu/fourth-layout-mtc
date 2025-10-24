@@ -1,30 +1,7 @@
 """Validation and normalization utilities for player imports"""
-from typing import Optional, Dict, Any, List, Tuple
+from typing import Optional, Dict, Any, Tuple
 from app.models.admin.player import Player
 from app.models.admin.slot import Slot
-from beanie import PydanticObjectId
-
-
-# Role normalization mappings
-ROLE_MAPPINGS = {
-    "bat": "Batsman",
-    "batter": "Batsman",
-    "batsman": "Batsman",
-    "bats": "Batsman",
-    "bwl": "Bowler",
-    "bowl": "Bowler",
-    "bowler": "Bowler",
-    "ar": "All-Rounder",
-    "allrounder": "All-Rounder",
-    "all-rounder": "All-Rounder",
-    "all_rounder": "All-Rounder",
-    "wk": "Wicket-Keeper",
-    "wicketkeeper": "Wicket-Keeper",
-    "wicket-keeper": "Wicket-Keeper",
-    "wicket_keeper": "Wicket-Keeper",
-    "wkt": "Wicket-Keeper",
-    "keeper": "Wicket-Keeper",
-}
 
 # Status normalization
 STATUS_MAPPINGS = {
@@ -42,43 +19,6 @@ class ValidationError(Exception):
         self.field = field
         self.message = message
         super().__init__(f"{field}: {message}")
-
-
-def normalize_role(role: Optional[str], strict: bool = False) -> str:
-    """
-    Normalize role value
-    
-    Args:
-        role: Raw role value
-        strict: If True, require exact match
-        
-    Returns:
-        Normalized role
-        
-    Raises:
-        ValidationError: If role is invalid
-    """
-    if not role:
-        raise ValidationError("role", "Role is required")
-    
-    role_clean = role.strip()
-    
-    # Check exact match first
-    if role_clean in ALLOWED_ROLES:
-        return role_clean
-    
-    # Try loose matching if not strict
-    if not strict:
-        role_lower = role_clean.lower()
-        if role_lower in ROLE_MAPPINGS:
-            return ROLE_MAPPINGS[role_lower]
-        
-        # Suggest similar role
-        suggestions = [r for r in ALLOWED_ROLES if role_lower in r.lower()]
-        if suggestions:
-            raise ValidationError("role", f"Invalid role '{role}' (did you mean '{suggestions[0]}'?)")
-    
-    raise ValidationError("role", f"Invalid role '{role}'. Allowed: {', '.join(ALLOWED_ROLES)}")
 
 
 def normalize_status(status: Optional[str]) -> str:
@@ -139,7 +79,6 @@ def validate_number(value: Any, field: str, min_val: float = 0) -> float:
 
 
 async def resolve_slot(
-    slot_id: Optional[str],
     slot_code: Optional[str],
     slot_name: Optional[str],
     strategy: str = "lookup"
@@ -148,7 +87,6 @@ async def resolve_slot(
     Resolve slot to ObjectId string
     
     Args:
-        slot_id: Slot ObjectId string
         slot_code: Slot code
         slot_name: Slot name
         strategy: 'lookup', 'create', or 'ignore'
@@ -161,16 +99,8 @@ async def resolve_slot(
     
     slot_doc = None
     
-    # Try slot_id first
-    if slot_id:
-        try:
-            oid = PydanticObjectId(slot_id)
-            slot_doc = await Slot.get(oid)
-        except Exception:
-            pass
-    
     # Try slot_code
-    if not slot_doc and slot_code:
+    if slot_code:
         slot_doc = await Slot.find_one(Slot.code == slot_code.strip())
         
         if not slot_doc and strategy == "create":
@@ -230,7 +160,7 @@ async def validate_player_row(
     """
     known_fields = {
         "name", "team", "status", "points",
-        "slot_id", "slot_code", "slot_name", "image_url", "image", "_row_number"
+        "slot_code", "slot_name", "image_url", "image", "_row_number"
     }
     
     try:
@@ -252,7 +182,6 @@ async def validate_player_row(
         
         # Resolve slot
         slot = await resolve_slot(
-            row.get("slot_id"),
             row.get("slot_code"),
             row.get("slot_name"),
             slot_strategy

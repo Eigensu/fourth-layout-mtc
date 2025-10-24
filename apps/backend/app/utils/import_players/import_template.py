@@ -14,7 +14,7 @@ TEMPLATE_COLUMNS = [
     "points",
     "slot_code",
     "slot_name",
-    "slot_id",
+    "mobile",
     "status",
     "image_url",
     "matches",
@@ -28,7 +28,7 @@ TEMPLATE_HEADERS = [
     "Points",
     "Slot Code",
     "Slot Name",
-    "Slot ID",
+    "Mobile",
     "Status",
     "Image URL",
     "Matches",
@@ -74,7 +74,7 @@ async def generate_xlsx_template(slot_codes: Optional[list[str]] = None) -> Bina
     ws.column_dimensions["C"].width = 10  # Points
     ws.column_dimensions["D"].width = 15  # Slot Code
     ws.column_dimensions["E"].width = 15  # Slot Name
-    ws.column_dimensions["F"].width = 25  # Slot ID
+    ws.column_dimensions["F"].width = 16  # Mobile
     ws.column_dimensions["G"].width = 12  # Status
     ws.column_dimensions["H"].width = 30  # Image URL
     ws.column_dimensions["I"].width = 12  # Matches
@@ -112,7 +112,7 @@ async def generate_xlsx_template(slot_codes: Optional[list[str]] = None) -> Bina
         1000,
         "SLOT 1 (Season)",
         "",
-        "",
+        "9876543210",
         "Active",
         "https://example.com/player.jpg",
         25,
@@ -136,7 +136,8 @@ async def generate_xlsx_template(slot_codes: Optional[list[str]] = None) -> Bina
         ("• Points: Player points (required)", False),
         ("", False),
         ("Optional Fields:", True),
-        ("• Slot Code/Name/ID: Reference to slot assignment (e.g., 'SLOT 1 (Season)')", False),
+        ("• Slot Code/Name: Reference to slot assignment (e.g., 'SLOT 1 (Season)')", False),
+        ("• Mobile: Contact number for the player (digits only is recommended)", False),
         ("• Status: Active, Inactive, or Injured (default: Active)", False),
         ("• Image URL: Player image URL", False),
         ("• Additional stats: Any extra columns (matches, runs, wickets, etc.) will be stored as stats", False),
@@ -176,7 +177,7 @@ def generate_csv_template() -> str:
         1000,
         "SLOT 1 (Season)",
         "",
-        "",
+        "9876543210",
         "Active",
         "https://example.com/player.jpg",
         25,

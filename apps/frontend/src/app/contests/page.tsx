@@ -90,7 +90,7 @@ export default function ContestsPage() {
                   <div className="min-w-0">
                     <button
                       onClick={() => router.push(`/contests/${c.id}`)}
-                      className="text-xl sm:text-2xl font-bold text-gray-900 hover:underline block text-left leading-tight break-words"
+                      className="text-xl sm:text-2xl font-bold text-gray-900 hover:underline block text-left leading-tight break-words whitespace-normal"
                     >
                       {c.name}
                     </button>
@@ -146,7 +146,7 @@ export default function ContestsPage() {
                     <div className="min-w-0">
                       <button
                         onClick={() => router.push(`/contests/${c.id}`)}
-                        className="text-xl sm:text-2xl font-bold text-gray-900 leading-tight break-words hover:underline text-left"
+                        className="text-xl sm:text-2xl font-bold text-gray-900 leading-tight break-words hover:underline text-left whitespace-normal"
                       >
                         {c.name}
                       </button>

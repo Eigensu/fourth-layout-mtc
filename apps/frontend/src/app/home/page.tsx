@@ -239,7 +239,7 @@ export default function HomePage() {
                     >
                       <div className="flex items-start justify-between">
                         <div className="min-w-0">
-                          <h3 className="text-lg sm:text-xl font-semibold text-gray-900 truncate">
+                          <h3 className="text-lg sm:text-xl font-semibold text-gray-900 break-words whitespace-normal overflow-visible hyphens-auto">
                             {c.name}
                           </h3>
                           {c.description && (
@@ -249,7 +249,8 @@ export default function HomePage() {
                           )}
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-primary-50 text-primary-700 border border-primary-200">
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-red-50 text-red-700 border border-red-200 inline-flex items-center gap-1">
+                            <span className="h-1.5 w-1.5 rounded-full bg-red-600 animate-pulse"></span>
                             LIVE
                           </span>
                           {joinedContestIds.has(c.id) && (
@@ -326,11 +327,11 @@ export default function HomePage() {
                     >
                       <div className="flex items-start justify-between">
                         <div className="min-w-0">
-                          <h3 className="text-lg sm:text-xl font-semibold text-gray-900 truncate">
+                          <h3 className="text-lg sm:text-xl font-semibold text-gray-900 whitespace-normal break-words overflow-visible hyphens-auto">
                             {c.name}
                           </h3>
                           {c.description && (
-                            <p className="text-sm text-gray-600 mt-0.5 line-clamp-2">
+                            <p className="text-sm text-gray-600 mt-0.5">
                               {c.description}
                             </p>
                           )}
@@ -349,7 +350,7 @@ export default function HomePage() {
                       <div className="text-xs text-gray-500 mt-2">
                         Starts: {new Date(c.start_at).toLocaleString()}
                       </div>
-                      <div className="mt-4 flex items-center gap-2">
+                      <div className="mt-4 hidden sm:flex items-center gap-2">
                         {!joinedContestIds.has(c.id) ? (
                           isAuthenticated ? (
                             <Link

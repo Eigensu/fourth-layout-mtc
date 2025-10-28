@@ -64,7 +64,18 @@ export interface EnrollmentResponse {
   status: 'active' | 'removed';
   enrolled_at: string;
   removed_at?: string | null;
-  initial_points: number;
+}
+
+export interface PlayerPointsResponseItem {
+  player_id: string;
+  name?: string | null;
+  team?: string | null;
+  points: number;
+  updated_at: string;
+}
+
+export interface PlayerPointsBulkUpsertRequest {
+  updates: { player_id: string; points: number }[];
 }
 
 export const adminContestsApi = {
@@ -94,6 +105,17 @@ export const adminContestsApi = {
   },
   unenroll: async (contestId: string, body: UnenrollBulkRequest): Promise<{ unenrolled: number }> => {
     const response = await apiClient.delete(`/api/admin/contests/${contestId}/enrollments`, { data: body });
+    return response.data;
+  },
+  getPlayerPoints: async (contestId: string): Promise<PlayerPointsResponseItem[]> => {
+    const response = await apiClient.get(`/api/admin/contests/${contestId}/player-points`);
+    return response.data;
+  },
+  upsertPlayerPoints: async (
+    contestId: string,
+    body: PlayerPointsBulkUpsertRequest
+  ): Promise<PlayerPointsResponseItem[]> => {
+    const response = await apiClient.put(`/api/admin/contests/${contestId}/player-points`, body);
     return response.data;
   },
 };

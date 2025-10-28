@@ -1,28 +1,43 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Player, playersApi } from "@/lib/api/admin/players";
+import { adminContestsApi } from "@/lib/api/admin/contests";
 import { getErrorMessage } from "@/lib/api/client";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 
 interface EditPointsModalProps {
   player: Player | null;
+  contestId?: string; // when set, edit per-contest points
+  initialPoints?: number; // initial contest points to prefill
   onClose: () => void;
   onSaved: () => void; // caller should refresh list
 }
 
-export function EditPointsModal({ player, onClose, onSaved }: EditPointsModalProps) {
-  const [points, setPoints] = useState<string>(
-    player?.points != null ? String(player.points) : "0"
-  );
+export function EditPointsModal({
+  player,
+  contestId,
+  initialPoints,
+  onClose,
+  onSaved,
+}: EditPointsModalProps) {
+  const [points, setPoints] = useState<string>("0");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  if (!player) return null;
+  useEffect(() => {
+    // prefill based on context: contest points if provided else global player points
+    if (contestId != null && initialPoints != null) {
+      setPoints(String(initialPoints));
+    } else {
+      setPoints(player?.points != null ? String(player.points) : "0");
+    }
+  }, [contestId, initialPoints, player]);
 
   const submit = async () => {
     setError(null);
+    if (!player) return; // Type guard: ensure player is present before proceeding
     const value = Number(points);
     if (Number.isNaN(value)) {
       setError("Please enter a valid number");
@@ -30,7 +45,13 @@ export function EditPointsModal({ player, onClose, onSaved }: EditPointsModalPro
     }
     setSaving(true);
     try {
-      await playersApi.updatePlayer(player.id, { points: value });
+      if (contestId) {
+        await adminContestsApi.upsertPlayerPoints(contestId, {
+          updates: [{ player_id: player.id, points: value }],
+        });
+      } else {
+        await playersApi.updatePlayer(player.id, { points: value });
+      }
       onSaved();
       onClose();
     } catch (e: unknown) {
@@ -39,6 +60,8 @@ export function EditPointsModal({ player, onClose, onSaved }: EditPointsModalPro
       setSaving(false);
     }
   };
+
+  if (!player) return null;
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">

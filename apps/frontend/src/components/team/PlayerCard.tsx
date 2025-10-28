@@ -382,7 +382,7 @@ const PlayerList: React.FC<PlayerListProps> = ({
       });
     }
     return list;
-  }, [players, filterRole, sortByRole]);
+  }, [players, filterRole, sortByRole, ROLE_ORDER]);
 
   const handleSelect = (playerId: string) => {
     const isAlreadySelected = selectedPlayers.includes(playerId);

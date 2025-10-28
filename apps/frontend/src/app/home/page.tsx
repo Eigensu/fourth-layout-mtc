@@ -9,7 +9,11 @@ import { PillNavbar } from "@/components/navigation/PillNavbar";
 import { MobileUserMenu } from "@/components/navigation/MobileUserMenu";
 import { useAuth } from "@/contexts/AuthContext";
 import { Spinner } from "@/components/ui/Loading";
-import { publicContestsApi, type Contest, type EnrollmentResponse } from "@/lib/api/public/contests";
+import {
+  publicContestsApi,
+  type Contest,
+  type EnrollmentResponse,
+} from "@/lib/api/public/contests";
 import { ROUTES } from "@/common/consts";
 import { useRouter } from "next/navigation";
 
@@ -19,7 +23,9 @@ export default function HomePage() {
   const [activeContests, setActiveContests] = useState<Contest[]>([]);
   const [loadingContests, setLoadingContests] = useState(false);
   const [contestsError, setContestsError] = useState<string | null>(null);
-  const [joinedContestIds, setJoinedContestIds] = useState<Set<string>>(new Set());
+  const [joinedContestIds, setJoinedContestIds] = useState<Set<string>>(
+    new Set()
+  );
   const [upcomingContests, setUpcomingContests] = useState<Contest[]>([]);
   const [loadingUpcoming, setLoadingUpcoming] = useState(false);
 
@@ -28,7 +34,10 @@ export default function HomePage() {
       try {
         setLoadingContests(true);
         setContestsError(null);
-        const res = await publicContestsApi.list({ status: "live", page_size: 8 });
+        const res = await publicContestsApi.list({
+          status: "live",
+          page_size: 8,
+        });
         setActiveContests(res.contests || []);
       } catch (e: any) {
         setContestsError(e?.message || "Failed to load contests");
@@ -43,7 +52,10 @@ export default function HomePage() {
     const loadUpcoming = async () => {
       try {
         setLoadingUpcoming(true);
-        const res = await publicContestsApi.list({ status: "upcoming", page_size: 8 });
+        const res = await publicContestsApi.list({
+          status: "upcoming",
+          page_size: 8,
+        });
         setUpcomingContests(res.contests || []);
       } catch {
         // ignore upcoming failures separately for now
@@ -58,7 +70,8 @@ export default function HomePage() {
   useEffect(() => {
     const loadEnrollments = async () => {
       try {
-        const mine: EnrollmentResponse[] = await publicContestsApi.myEnrollments();
+        const mine: EnrollmentResponse[] =
+          await publicContestsApi.myEnrollments();
         const ids = new Set<string>(mine.map((e) => e.contest_id));
         setJoinedContestIds(ids);
       } catch {
@@ -127,7 +140,7 @@ export default function HomePage() {
                   className="text-center md:text-left"
                 >
                   <h1 className="text-4xl sm:text-5xl lg:text-5xl font-extrabold text-primary-700 tracking-tight leading-tight mb-4">
-                    Cricket Fantasy League
+                    Tyrant Fantasy League
                   </h1>
                   <p className="text-lg sm:text-xl text-gray-700 mb-8 max-w-xl mx-auto md:mx-0 leading-relaxed">
                     Build your dream team, compete with friends, and rise to the
@@ -187,7 +200,9 @@ export default function HomePage() {
           {/* Active Contests */}
           <section className="mx-4 mb-10 sm:mb-12">
             <div className="container mx-auto px-4 sm:px-6 max-w-screen-xl">
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-4">Active Contests</h2>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-4">
+                Active Contests
+              </h2>
               {contestsError && (
                 <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700 text-sm mb-4">
                   {contestsError}
@@ -196,7 +211,10 @@ export default function HomePage() {
               {loadingContests ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {Array.from({ length: 4 }).map((_, i) => (
-                    <div key={i} className="h-40 bg-white rounded-2xl shadow animate-pulse" />
+                    <div
+                      key={i}
+                      className="h-40 bg-white rounded-2xl shadow animate-pulse"
+                    />
                   ))}
                 </div>
               ) : activeContests.length === 0 ? (
@@ -221,15 +239,23 @@ export default function HomePage() {
                     >
                       <div className="flex items-start justify-between">
                         <div className="min-w-0">
-                          <h3 className="text-lg sm:text-xl font-semibold text-gray-900 truncate">{c.name}</h3>
+                          <h3 className="text-lg sm:text-xl font-semibold text-gray-900 truncate">
+                            {c.name}
+                          </h3>
                           {c.description && (
-                            <p className="text-sm text-gray-600 mt-0.5 line-clamp-2">{c.description}</p>
+                            <p className="text-sm text-gray-600 mt-0.5 line-clamp-2">
+                              {c.description}
+                            </p>
                           )}
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-primary-50 text-primary-700 border border-primary-200">LIVE</span>
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-primary-50 text-primary-700 border border-primary-200">
+                            LIVE
+                          </span>
                           {joinedContestIds.has(c.id) && (
-                            <span className="text-xs px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200">Joined</span>
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200">
+                              Joined
+                            </span>
                           )}
                         </div>
                       </div>
@@ -239,16 +265,28 @@ export default function HomePage() {
                       <div className="mt-4 flex items-center gap-2">
                         {!joinedContestIds.has(c.id) ? (
                           isAuthenticated ? (
-                            <Link href={`/contests/${c.id}`} className="inline-flex justify-center items-center px-4 py-2 rounded-lg bg-gradient-primary text-white text-sm font-medium shadow hover:opacity-95" onClick={(e) => e.stopPropagation()}>
+                            <Link
+                              href={`/contests/${c.id}`}
+                              className="inline-flex justify-center items-center px-4 py-2 rounded-lg bg-gradient-primary text-white text-sm font-medium shadow hover:opacity-95"
+                              onClick={(e) => e.stopPropagation()}
+                            >
                               Join Contest
                             </Link>
                           ) : (
-                            <Link href={`${ROUTES.LOGIN}?next=${encodeURIComponent(`/contests/${c.id}/team`)}`} className="inline-flex justify-center items-center px-4 py-2 rounded-lg bg-gradient-primary text-white text-sm font-medium shadow hover:opacity-95" onClick={(e) => e.stopPropagation()}>
+                            <Link
+                              href={`${ROUTES.LOGIN}?next=${encodeURIComponent(`/contests/${c.id}/team`)}`}
+                              className="inline-flex justify-center items-center px-4 py-2 rounded-lg bg-gradient-primary text-white text-sm font-medium shadow hover:opacity-95"
+                              onClick={(e) => e.stopPropagation()}
+                            >
                               Login to Join Contest
                             </Link>
                           )
                         ) : (
-                          <Link href={`/contests/${c.id}/leaderboard`} className="inline-flex justify-center items-center px-4 py-2 rounded-lg border text-sm font-medium text-primary-700 border-primary-200 hover:bg-primary-50" onClick={(e) => e.stopPropagation()}>
+                          <Link
+                            href={`/contests/${c.id}/leaderboard`}
+                            className="inline-flex justify-center items-center px-4 py-2 rounded-lg border text-sm font-medium text-primary-700 border-primary-200 hover:bg-primary-50"
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             View Leaderboard
                           </Link>
                         )}
@@ -263,11 +301,16 @@ export default function HomePage() {
           {/* Upcoming Contests */}
           <section className="mx-4 mb-10 sm:mb-12">
             <div className="container mx-auto px-4 sm:px-6 max-w-screen-xl">
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-4">Upcoming Contests</h2>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-4">
+                Upcoming Contests
+              </h2>
               {loadingUpcoming ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {Array.from({ length: 4 }).map((_, i) => (
-                    <div key={i} className="h-40 bg-white rounded-2xl shadow animate-pulse" />
+                    <div
+                      key={i}
+                      className="h-40 bg-white rounded-2xl shadow animate-pulse"
+                    />
                   ))}
                 </div>
               ) : upcomingContests.length === 0 ? (
@@ -277,18 +320,29 @@ export default function HomePage() {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {upcomingContests.map((c) => (
-                    <div key={c.id} className="bg-white/80 backdrop-blur-sm rounded-2xl border border-primary-100 p-5 shadow-sm">
+                    <div
+                      key={c.id}
+                      className="bg-white/80 backdrop-blur-sm rounded-2xl border border-primary-100 p-5 shadow-sm"
+                    >
                       <div className="flex items-start justify-between">
                         <div className="min-w-0">
-                          <h3 className="text-lg sm:text-xl font-semibold text-gray-900 truncate">{c.name}</h3>
+                          <h3 className="text-lg sm:text-xl font-semibold text-gray-900 truncate">
+                            {c.name}
+                          </h3>
                           {c.description && (
-                            <p className="text-sm text-gray-600 mt-0.5 line-clamp-2">{c.description}</p>
+                            <p className="text-sm text-gray-600 mt-0.5 line-clamp-2">
+                              {c.description}
+                            </p>
                           )}
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 border border-gray-200">UPCOMING</span>
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 border border-gray-200">
+                            UPCOMING
+                          </span>
                           {joinedContestIds.has(c.id) && (
-                            <span className="text-xs px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200">Joined</span>
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200">
+                              Joined
+                            </span>
                           )}
                         </div>
                       </div>
@@ -298,16 +352,25 @@ export default function HomePage() {
                       <div className="mt-4 flex items-center gap-2">
                         {!joinedContestIds.has(c.id) ? (
                           isAuthenticated ? (
-                            <Link href={`/contests/${c.id}`} className="inline-flex justify-center items-center px-4 py-2 rounded-lg bg-gradient-primary text-white text-sm font-medium shadow hover:opacity-95">
+                            <Link
+                              href={`/contests/${c.id}`}
+                              className="inline-flex justify-center items-center px-4 py-2 rounded-lg bg-gradient-primary text-white text-sm font-medium shadow hover:opacity-95"
+                            >
                               Join Contest
                             </Link>
                           ) : (
-                            <Link href={`${ROUTES.LOGIN}?next=${encodeURIComponent(`/contests/${c.id}/team`)}`} className="inline-flex justify-center items-center px-4 py-2 rounded-lg bg-gradient-primary text-white text-sm font-medium shadow hover:opacity-95">
+                            <Link
+                              href={`${ROUTES.LOGIN}?next=${encodeURIComponent(`/contests/${c.id}/team`)}`}
+                              className="inline-flex justify-center items-center px-4 py-2 rounded-lg bg-gradient-primary text-white text-sm font-medium shadow hover:opacity-95"
+                            >
                               Login to Join Contest
                             </Link>
                           )
                         ) : (
-                          <Link href={`/contests/${c.id}/team`} className="inline-flex justify-center items-center px-4 py-2 rounded-lg border text-sm font-medium text-primary-700 border-primary-200 hover:bg-primary-50">
+                          <Link
+                            href={`/contests/${c.id}/team`}
+                            className="inline-flex justify-center items-center px-4 py-2 rounded-lg border text-sm font-medium text-primary-700 border-primary-200 hover:bg-primary-50"
+                          >
                             Edit Team
                           </Link>
                         )}

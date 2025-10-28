@@ -50,7 +50,6 @@ export interface EnrollmentResponse {
   status: "active" | "removed";
   enrolled_at: string;
   removed_at?: string | null;
-  initial_points: number;
 }
 
 export interface ContestTeamPlayer {

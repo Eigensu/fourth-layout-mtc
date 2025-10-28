@@ -1,10 +1,13 @@
 from fastapi import APIRouter, HTTPException, Query, Depends
-from typing import Optional, List
+from typing import Optional, List, Dict
 from datetime import datetime
 from beanie import PydanticObjectId
+from pydantic import BaseModel
 
 from app.models.contest import Contest
 from app.models.team import Team
+from app.models.player import Player
+from app.models.player_contest_points import PlayerContestPoints
 from app.models.team_contest_enrollment import TeamContestEnrollment
 from app.common.enums.contests import ContestStatus, ContestVisibility
 from app.common.enums.enrollments import EnrollmentStatus
@@ -19,11 +22,10 @@ from app.schemas.enrollment import (
     UnenrollBulkRequest,
     EnrollmentResponse,
 )
-from app.models.user import User
 from app.utils.dependencies import get_admin_user
+from app.models.user import User
 
 router = APIRouter(prefix="/api/admin/contests", tags=["Admin - Contests"])
-
 
 async def to_response(contest: Contest) -> ContestResponse:
     return ContestResponse(
@@ -210,7 +212,6 @@ async def enroll_teams(
             contest_id=contest.id,
             status=EnrollmentStatus.ACTIVE,
             enrolled_at=datetime.utcnow(),
-            initial_points=team.total_points,
         )
         await enr.insert()
         # Persist contest_id on the team for convenience
@@ -230,7 +231,6 @@ async def enroll_teams(
                 status=enr.status,
                 enrolled_at=enr.enrolled_at,
                 removed_at=enr.removed_at,
-                initial_points=enr.initial_points,
             )
         )
 
@@ -305,3 +305,138 @@ async def unenroll(
             pass
 
     return {"unenrolled": count}
+
+
+# -------- Per-Contest Player Points Management --------
+from pydantic import BaseModel
+from typing import Dict
+
+
+class PlayerPointsItem(BaseModel):
+    player_id: str
+    points: float
+
+
+class PlayerPointsBulkUpsertRequest(BaseModel):
+    updates: list[PlayerPointsItem]
+
+
+class PlayerPointsResponseItem(BaseModel):
+    player_id: str
+    name: Optional[str] = None
+    team: Optional[str] = None
+    points: float
+    updated_at: datetime
+
+
+@router.get("/{contest_id}/player-points", response_model=list[PlayerPointsResponseItem])
+async def get_player_points(
+    contest_id: str,
+    current_user: User = Depends(get_admin_user),
+):
+    contest = await Contest.get(contest_id)
+    if not contest:
+        raise HTTPException(status_code=404, detail="Contest not found")
+
+    docs = await PlayerContestPoints.find({"contest_id": contest.id}).to_list()
+    # fetch player details in batch
+    pid_set = [doc.player_id for doc in docs]
+    players_by_id: Dict[str, Player] = {}
+    if pid_set:
+        players = await Player.find({"_id": {"$in": pid_set}}).to_list()
+        players_by_id = {str(p.id): p for p in players}
+
+    resp: list[PlayerPointsResponseItem] = []
+    for doc in docs:
+        p = players_by_id.get(str(doc.player_id))
+        resp.append(PlayerPointsResponseItem(
+            player_id=str(doc.player_id),
+            name=(p.name if p else None) if p else None,
+            team=(p.team if p else None) if p else None,
+            points=float(doc.points or 0.0),
+            updated_at=doc.updated_at,
+        ))
+    return resp
+
+
+@router.put("/{contest_id}/player-points", response_model=list[PlayerPointsResponseItem])
+async def upsert_player_points(
+    contest_id: str,
+    body: PlayerPointsBulkUpsertRequest,
+    current_user: User = Depends(get_admin_user),
+):
+    contest = await Contest.get(contest_id)
+    if not contest:
+        raise HTTPException(status_code=404, detail="Contest not found")
+
+    if not body.updates:
+        return []
+
+    # Validate player ids and build list
+    valid_items: list[tuple[PydanticObjectId, float]] = []
+    for item in body.updates:
+        try:
+            poid = PydanticObjectId(item.player_id)
+        except Exception:
+            raise HTTPException(status_code=400, detail=f"Invalid player id: {item.player_id}")
+        valid_items.append((poid, float(item.points)))
+
+    # Upsert
+    updated_docs: list[PlayerContestPoints] = []
+    now = datetime.utcnow()
+    for poid, pts in valid_items:
+        existing = await PlayerContestPoints.find_one({
+            "contest_id": contest.id,
+            "player_id": poid,
+        })
+        if existing:
+            existing.points = pts
+            existing.updated_at = now
+            await existing.save()
+            updated_docs.append(existing)
+        else:
+            doc = PlayerContestPoints(
+                contest_id=contest.id,
+                player_id=poid,
+                points=pts,
+                updated_at=now,
+            )
+            await doc.insert()
+            updated_docs.append(doc)
+
+    # Build response with player details
+    pid_set = [doc.player_id for doc in updated_docs]
+    players_by_id: Dict[str, Player] = {}
+    if pid_set:
+        players = await Player.find({"_id": {"$in": pid_set}}).to_list()
+        players_by_id = {str(p.id): p for p in players}
+
+    resp: list[PlayerPointsResponseItem] = []
+    for doc in updated_docs:
+        p = players_by_id.get(str(doc.player_id))
+        resp.append(PlayerPointsResponseItem(
+            player_id=str(doc.player_id),
+            name=(p.name if p else None) if p else None,
+            team=(p.team if p else None) if p else None,
+            points=float(doc.points or 0.0),
+            updated_at=doc.updated_at,
+        ))
+    # If this is a full contest (not daily), mirror these points into Player.points
+    try:
+        if contest.contest_type != "daily" and updated_docs:
+            # Batch update players so that Player.points equals the contest total for this contest
+            for doc in updated_docs:
+                try:
+                    player = await Player.get(doc.player_id)
+                    if player:
+                        player.points = float(doc.points or 0.0)
+                        player.updated_at = datetime.utcnow()
+                        await player.save()
+                except Exception:
+                    # continue best-effort for each player, do not fail the response
+                    continue
+    except Exception:
+        # Non-blocking
+        pass
+
+    return resp

@@ -20,7 +20,6 @@ class EnrollmentResponse(BaseModel):
     status: str
     enrolled_at: datetime
     removed_at: Optional[datetime] = None
-    initial_points: float
 
     class Config:
         from_attributes = True

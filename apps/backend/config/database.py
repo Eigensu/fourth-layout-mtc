@@ -10,6 +10,7 @@ from app.models.admin.player import Player as AdminPlayer
 from app.models.admin.slot import Slot
 from app.models.admin.import_log import ImportLog
 from app.models.player import Player as PublicPlayer
+from app.models.player_contest_points import PlayerContestPoints
 
 settings = get_settings()
 
@@ -40,6 +41,7 @@ async def connect_to_mongo():
                 Team,
                 AdminPlayer,
                 PublicPlayer,
+                PlayerContestPoints,
                 Slot,
                 ImportLog,
                 Contest,

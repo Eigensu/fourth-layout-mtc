@@ -65,7 +65,7 @@ async def backfill(dry_run: bool = True) -> None:
 
         if dry_run:
             print(
-                f"[PLAN] Enroll team={team.id} user={team.user_id} contest={contest.id} initial_points={team.total_points}"
+                f"[PLAN] Enroll team={team.id} user={team.user_id} contest={contest.id}"
             )
             migrated += 1
         else:
@@ -75,11 +75,10 @@ async def backfill(dry_run: bool = True) -> None:
                 contest_id=contest.id,
                 status="active",
                 enrolled_at=datetime.utcnow(),
-                initial_points=team.total_points,
             )
             await enr.insert()
             print(
-                f"[OK] Enrolled team={team.id} user={team.user_id} contest={contest.id} initial_points={team.total_points}"
+                f"[OK] Enrolled team={team.id} user={team.user_id} contest={contest.id}"
             )
             migrated += 1
 

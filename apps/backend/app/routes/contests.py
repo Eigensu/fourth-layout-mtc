@@ -11,6 +11,7 @@ from app.models.team_contest_enrollment import TeamContestEnrollment
 from app.models.team import Team
 from app.models.user import User
 from app.models.player import Player
+from app.models.player_contest_points import PlayerContestPoints
 from app.utils.security import decode_token
 from app.schemas.contest import ContestListResponse, ContestResponse
 from app.schemas.leaderboard import LeaderboardResponseSchema, LeaderboardEntrySchema
@@ -158,7 +159,6 @@ async def list_my_enrollments(current_user: User = Depends(get_current_active_us
             status=enr.status,
             enrolled_at=enr.enrolled_at,
             removed_at=enr.removed_at,
-            initial_points=enr.initial_points,
         ))
     return results
 
@@ -221,7 +221,37 @@ async def contest_leaderboard(
     users = await User.find({"_id": {"$in": user_ids}}).to_list()
     users_by_id: Dict[str, User] = {str(u.id): u for u in users}
 
-    # compute points and build entries
+    # compute points and build entries using per-contest player points
+    # 1) Collect all player ObjectIds across enrolled teams
+    from bson import ObjectId as _OID
+    all_player_ids: set[PydanticObjectId] = set()
+    team_player_oids_map: Dict[str, list[PydanticObjectId]] = {}
+    for enr in enrollments:
+        team = teams_by_id.get(str(enr.team_id))
+        if not team:
+            continue
+        oids: list[PydanticObjectId] = []
+        for pid in team.player_ids:
+            if _OID.is_valid(pid):
+                try:
+                    oids.append(PydanticObjectId(pid))
+                except Exception:
+                    continue
+        team_player_oids_map[str(enr.team_id)] = oids
+        all_player_ids.update(oids)
+
+    # 2) Fetch all PlayerContestPoints for this contest once
+    pcp_docs = []
+    if all_player_ids:
+        pcp_docs = await PlayerContestPoints.find({
+            "contest_id": contest.id,
+            "player_id": {"$in": list(all_player_ids)},
+        }).to_list()
+
+    # 3) Build lookup: player_id(str) -> points(float)
+    pcp_points_map: Dict[str, float] = {str(doc.player_id): float(doc.points or 0.0) for doc in pcp_docs}
+
+    # 4) Sum per team and build computed list (apply C/VC multipliers)
     computed = []
     for enr in enrollments:
         team = teams_by_id.get(str(enr.team_id))
@@ -230,8 +260,21 @@ async def contest_leaderboard(
         user = users_by_id.get(str(team.user_id))
         if not user:
             continue
-        points = float(team.total_points) - float(enr.initial_points)
-        computed.append((team, user, points))
+        oids = team_player_oids_map.get(str(enr.team_id), [])
+        # Sum using string form to match map keys, with captain/vice multipliers
+        total = 0.0
+        captain_id = str(team.captain_id) if team.captain_id else None
+        vice_id = str(team.vice_captain_id) if team.vice_captain_id else None
+        for oid in oids:
+            pid = str(oid)
+            base = float(pcp_points_map.get(pid, 0.0))
+            if captain_id and pid == captain_id:
+                base *= 2.0
+            elif vice_id and pid == vice_id:
+                base *= 1.5
+            total += base
+        points = float(total)
+        computed.append((team, user, float(points)))
 
     # sort by points desc
     computed.sort(key=lambda tup: tup[2], reverse=True)
@@ -332,24 +375,15 @@ async def enroll_in_contest(
             status=existing.status,
             enrolled_at=existing.enrolled_at,
             removed_at=existing.removed_at,
-            initial_points=existing.initial_points,
         )
 
-    # Snapshot per-player baselines at enrollment
-    player_baselines: Dict[str, float] = {}
-    if team.player_ids:
-        player_docs = await Player.find({"_id": {"$in": [PydanticObjectId(pid) for pid in team.player_ids if ObjectId.is_valid(pid)]}}).to_list()
-        for p in player_docs:
-            player_baselines[str(p.id)] = float(p.points or 0)
-
+    # Create enrollment without baseline fields (points will be contest-scoped)
     enr = TeamContestEnrollment(
         team_id=team.id,
         contest_id=contest.id,
         user_id=current_user.id,
         status=EnrollmentStatus.ACTIVE,
         enrolled_at=datetime.utcnow(),
-        initial_points=team.total_points,
-        player_initial_points=player_baselines,
     )
     await enr.insert()
 
@@ -361,7 +395,6 @@ async def enroll_in_contest(
         status=enr.status,
         enrolled_at=enr.enrolled_at,
         removed_at=enr.removed_at,
-        initial_points=enr.initial_points,
     )
 
 
@@ -386,36 +419,50 @@ async def get_team_in_contest(contest_id: str, team_id: str, current_user: User 
     if not enr:
         raise HTTPException(status_code=404, detail="Team is not enrolled in this contest")
 
-    # Load players
+    # Load players for price/name/team details
     player_ids_valid = [PydanticObjectId(pid) for pid in team.player_ids if ObjectId.is_valid(pid)]
     players = await Player.find({"_id": {"$in": player_ids_valid}}).to_list()
 
     players_by_id: Dict[str, Player] = {str(p.id): p for p in players}
-    base_map = enr.player_initial_points or {}
+
+    # Fetch per-contest points for these players
+    pcp_docs = []
+    if player_ids_valid:
+        pcp_docs = await PlayerContestPoints.find({
+            "contest_id": contest.id,
+            "player_id": {"$in": player_ids_valid},
+        }).to_list()
+    pcp_points_map: Dict[str, float] = {str(doc.player_id): float(doc.points or 0.0) for doc in pcp_docs}
 
     player_items: List[ContestTeamPlayerSchema] = []
+    captain_id = str(team.captain_id) if team.captain_id else None
+    vice_id = str(team.vice_captain_id) if team.vice_captain_id else None
     for pid in team.player_ids:
         p = players_by_id.get(pid)
         if not p:
             continue
-        base = float(base_map.get(pid, 0.0))
-        cur = float(p.points or 0.0)
+        # Apply multipliers for this player's contest points if C/VC
+        contest_pts = float(pcp_points_map.get(pid, 0.0))
+        if captain_id and pid == captain_id:
+            contest_pts *= 2.0
+        elif vice_id and pid == vice_id:
+            contest_pts *= 1.5
         player_items.append(ContestTeamPlayerSchema(
             id=pid,
             name=p.name,
             team=p.team,
             price=float(p.price or 0.0),
-            base_points=base,
-            contest_points=cur - base,
+            base_points=0.0,
+            contest_points=contest_pts,
         ))
 
-    team_points = float(team.total_points) - float(enr.initial_points or 0.0)
+    team_points = float(sum(item.contest_points for item in player_items))
 
     return ContestTeamResponse(
         team_id=str(team.id),
         team_name=team.team_name,
         contest_id=str(contest.id),
-        base_points=float(enr.initial_points or 0.0),
+        base_points=0.0,
         contest_points=team_points,
         players=player_items,
     )

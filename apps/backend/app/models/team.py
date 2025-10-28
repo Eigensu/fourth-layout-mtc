@@ -35,4 +35,5 @@ class Team(Document):
             "user_id",
             [("total_points", -1)],  # Descending order for leaderboard
             [("created_at", -1)],
+            [("player_ids", 1)],  # Multikey index to speed up selection lookups
         ]

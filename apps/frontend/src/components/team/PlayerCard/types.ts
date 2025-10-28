@@ -12,6 +12,8 @@ export interface Player {
     wickets?: number;
     average?: number;
   };
+  /** Optional: mark player as hot (selected in many teams) */
+  isHot?: boolean;
 }
 
 export interface PlayerCardProps {

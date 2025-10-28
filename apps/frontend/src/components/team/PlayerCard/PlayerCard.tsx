@@ -2,6 +2,7 @@ import * as React from "react";
 import { Avatar } from "../../ui/Avatar";
 import { Badge } from "../../ui/Badge";
 import { Card } from "../../ui/Card";
+import { Flame } from "lucide-react";
 import type { Player, PlayerCardProps } from "./types.js";
 
 const PlayerCard: React.FC<PlayerCardProps> = ({
@@ -69,22 +70,25 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
               {player.team}
             </span>
             {player.slotLabel && (
-              <Badge variant="secondary" size="sm">{player.slotLabel}</Badge>
+              <Badge variant="secondary" size="sm">
+                {player.slotLabel}
+              </Badge>
+            )}
+            {player.isHot && (
+              <Badge
+                variant="error"
+                size="sm"
+                className="flex items-center gap-1 bg-amber-200 text-red-800 border border-red-300 shadow-sm"
+              >
+                <Flame className="w-3 h-3 text-red-700" strokeWidth={2} />
+                <span className="hidden sm:inline">Most Picked</span>
+              </Badge>
             )}
           </div>
         </div>
 
         {/* Right Side: Score and Checkbox */}
         <div className="flex flex-col items-end gap-0.5 sm:gap-1">
-          {compactShowPrice ? (
-            <span className="text-xs sm:text-sm font-semibold text-gray-900 whitespace-nowrap">
-              ₹{Math.floor(player.price)}
-            </span>
-          ) : (
-            <span className="text-xl sm:text-2xl font-bold text-gray-900 whitespace-nowrap">
-              {player.points}
-            </span>
-          )}
           <div
             className={`
               w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 flex items-center justify-center transition-all
@@ -152,7 +156,9 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
 
       <div className={`p-3 ${variant === "captain" ? "sm:p-3" : "sm:p-4"}`}>
         {/* Player Header */}
-        <div className={`flex items-center justify-between ${variant === "captain" ? "mb-2" : "mb-3 sm:mb-4"}`}>
+        <div
+          className={`flex items-center justify-between ${variant === "captain" ? "mb-2" : "mb-3 sm:mb-4"}`}
+        >
           <div className="flex items-center space-x-2 sm:space-x-3">
             <Avatar
               name={player.name}
@@ -162,18 +168,33 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
             />
 
             <div>
-              <h4 className={`font-semibold text-gray-900 ${variant === "captain" ? "text-sm sm:text-base" : "text-sm sm:text-base"}`}>
+              <h4
+                className={`font-semibold text-gray-900 ${variant === "captain" ? "text-sm sm:text-base" : "text-sm sm:text-base"}`}
+              >
                 {player.name}
               </h4>
               <div className="flex items-center space-x-1.5 sm:space-x-2 mt-0.5 sm:mt-1">
                 {player.slotLabel && (
-                  <Badge size="sm" className="text-[10px] sm:text-xs px-1 sm:px-2 py-0 sm:py-0.5">
+                  <Badge
+                    size="sm"
+                    className="text-[10px] sm:text-xs px-1 sm:px-2 py-0 sm:py-0.5"
+                  >
                     {player.slotLabel}
                   </Badge>
                 )}
                 <span className="text-xs sm:text-sm text-gray-500">
                   {player.team}
                 </span>
+                {player.isHot && (
+                  <Badge
+                    variant="error"
+                    size="sm"
+                    className="text-[10px] sm:text-xs px-1 sm:px-2 py-0 sm:py-0.5 flex items-center gap-1 bg-amber-200 text-red-800 border border-red-300 shadow-sm"
+                  >
+                    <Flame className="w-3 h-3 text-red-700" strokeWidth={2} />
+                    <span className="hidden sm:inline">Most Picked</span>
+                  </Badge>
+                )}
               </div>
             </div>
           </div>
@@ -208,7 +229,9 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
               <div className="text-lg font-bold text-success-600">
                 {player.points}
               </div>
-              <div className="text-[10px] sm:text-xs text-gray-500">Fantasy Points</div>
+              <div className="text-[10px] sm:text-xs text-gray-500">
+                Fantasy Points
+              </div>
             </div>
           </div>
         ) : (

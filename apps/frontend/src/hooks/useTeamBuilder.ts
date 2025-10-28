@@ -1,7 +1,11 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import type { Player } from "@/components";
 import { fetchSlots, type ApiSlot } from "@/lib/api/public/slots";
-import { fetchPlayersBySlot, type ApiPlayer } from "@/lib/api/public/players";
+import {
+  fetchPlayersBySlot,
+  fetchHotPlayerIds,
+  type ApiPlayer,
+} from "@/lib/api/public/players";
 
 export type UIBuildPlayer = Player & { slotId: string };
 
@@ -80,7 +84,7 @@ export function useTeamBuilder(
           })
         );
         const flatPlayers: ApiPlayer[] = playerArrays.flat();
-        const mapped: UIBuildPlayer[] = flatPlayers.map((p) => ({
+        const mappedBase: UIBuildPlayer[] = flatPlayers.map((p) => ({
           id: p.id,
           name: p.name,
           team: p.team || "",
@@ -90,6 +94,19 @@ export function useTeamBuilder(
           image: p.image_url || undefined,
           slotId: String(p.slot || ""),
           stats: { matches: 0 },
+        }));
+        // Fetch hot player IDs (contest-aware)
+        let hotIdsSet: Set<string> = new Set();
+        try {
+          const hot = await fetchHotPlayerIds({ contest_id: contestId });
+          hotIdsSet = new Set(hot.player_ids);
+        } catch (_) {
+          // ignore hot ids failure; UI can work without it
+        }
+        const mapped: UIBuildPlayer[] = mappedBase.map((p) => ({
+          ...p,
+          // wire through to Player.isHot (extends Player in components types)
+          isHot: hotIdsSet.has(p.id),
         }));
         if (!cancelled) setPlayers(mapped);
       } catch (e: any) {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { Trophy } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
@@ -85,8 +86,8 @@ export default function ContestsPage() {
         <div className="grid gap-4 sm:gap-5">
           {activeContests.map((c) => (
             <div key={c.id} className="w-full">
-              <div className="rounded-3xl bg-white/90 backdrop-blur shadow-md px-4 sm:px-6 py-5 sm:py-6">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
+              <div className="rounded-3xl bg-white/90 backdrop-blur shadow-md px-4 sm:px-6 py-5 sm:py-6 min-h-[140px]">
+                <div className="flex items-start justify-between gap-4 sm:gap-6">
                   <div className="min-w-0">
                     <button
                       onClick={() => router.push(`/contests/${c.id}`)}
@@ -106,23 +107,43 @@ export default function ContestsPage() {
                       {new Date(c.start_at).toLocaleString()} –{" "}
                       {new Date(c.end_at).toLocaleString()}
                     </div>
+                    <div className="mt-2 flex items-center gap-2">
+                      {joinedContestIds.has(c.id) ? (
+                        <button
+                          onClick={() => router.push(`/contests/${c.id}/team`)}
+                          className="w-full sm:w-auto px-4 py-2.5 sm:px-6 sm:py-2 rounded-xl border text-sm sm:text-base font-semibold text-primary-700 border-primary-200 hover:bg-primary-50 whitespace-nowrap"
+                        >
+                          View Team
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleJoin(c.id)}
+                          className="w-full sm:w-auto px-4 py-2.5 sm:px-8 sm:py-2 rounded-xl bg-gradient-primary text-white text-sm sm:text-base font-semibold shadow hover:opacity-95"
+                        >
+                          Join
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  <div className="w-full sm:w-auto flex flex-col sm:flex-row gap-2 sm:gap-3 sm:self-center mt-3 sm:mt-0">
-                    {joinedContestIds.has(c.id) ? (
-                      <button
-                        onClick={() => router.push(`/contests/${c.id}/team`)}
-                        className="w-full sm:w-auto px-4 py-2.5 sm:px-6 sm:py-3 rounded-xl border text-sm sm:text-base font-semibold text-primary-700 border-primary-200 hover:bg-primary-50 whitespace-nowrap"
-                      >
-                        View Team
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => handleJoin(c.id)}
-                        className="w-full sm:w-auto px-4 py-2.5 sm:px-6 sm:py-3 rounded-xl bg-gradient-primary text-white text-sm sm:text-base font-semibold shadow hover:opacity-95"
-                      >
-                        Join
-                      </button>
-                    )}
+                  <div className="flex flex-col items-end gap-2 shrink-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-red-50 text-red-700 border border-red-200 inline-flex items-center gap-1">
+                        <span className="h-1.5 w-1.5 rounded-full bg-red-600 animate-pulse"></span>
+                        LIVE
+                      </span>
+                      {joinedContestIds.has(c.id) && (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200">
+                          Joined
+                        </span>
+                      )}
+                    </div>
+                    <Image
+                      src="/Contests/logo.png"
+                      alt="Contest logo"
+                      width={120}
+                      height={32}
+                      className="w-[120px] h-auto opacity-90"
+                    />
                   </div>
                 </div>
               </div>
@@ -141,8 +162,8 @@ export default function ContestsPage() {
           <div className="grid gap-4 sm:gap-5">
             {upcomingContests.map((c) => (
               <div key={c.id} className="w-full">
-                <div className="rounded-3xl bg-white/90 backdrop-blur shadow-md px-4 sm:px-6 py-5 sm:py-6">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
+                <div className="rounded-3xl bg-white/90 backdrop-blur shadow-md px-4 sm:px-6 py-5 sm:py-6 min-h-[140px]">
+                  <div className="flex items-start justify-between gap-4 sm:gap-6">
                     <div className="min-w-0">
                       <button
                         onClick={() => router.push(`/contests/${c.id}`)}
@@ -162,25 +183,44 @@ export default function ContestsPage() {
                         Starts: {new Date(c.start_at).toLocaleString()} · Ends:{" "}
                         {new Date(c.end_at).toLocaleString()}
                       </div>
+                      <div className="mt-2 flex items-center gap-2">
+                        {joinedContestIds.has(c.id) ? (
+                          <button
+                            onClick={() => handleJoin(c.id)}
+                            className="w-full sm:w-auto px-4 py-2.5 sm:px-6 sm:py-3 rounded-xl border text-sm sm:text-base font-semibold text-primary-700 border-primary-200 hover:bg-primary-50 whitespace-nowrap"
+                            title="View your team for this contest"
+                          >
+                            View Team
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleJoin(c.id)}
+                            className="w-full sm:w-auto px-4 py-2.5 sm:px-6 sm:py-3 rounded-xl bg-gradient-primary text-white text-sm sm:text-base font-semibold shadow hover:opacity-95"
+                            title="Join contest and open team builder"
+                          >
+                            Join Contest
+                          </button>
+                        )}
+                      </div>
                     </div>
-                    <div className="w-full sm:w-auto flex flex-col sm:flex-row gap-2 sm:gap-3 sm:self-center mt-3 sm:mt-0">
-                      {joinedContestIds.has(c.id) ? (
-                        <button
-                          onClick={() => handleJoin(c.id)}
-                          className="w-full sm:w-auto px-4 py-2.5 sm:px-6 sm:py-3 rounded-xl border text-sm sm:text-base font-semibold text-primary-700 border-primary-200 hover:bg-primary-50 whitespace-nowrap"
-                          title="View your team for this contest"
-                        >
-                          View Team
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => handleJoin(c.id)}
-                          className="w-full sm:w-auto px-4 py-2.5 sm:px-6 sm:py-3 rounded-xl bg-gradient-primary text-white text-sm sm:text-base font-semibold shadow hover:opacity-95"
-                          title="Join contest and open team builder"
-                        >
-                          Join Contest
-                        </button>
-                      )}
+                    <div className="flex flex-col items-end gap-2 shrink-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 border border-gray-200">
+                          UPCOMING
+                        </span>
+                        {joinedContestIds.has(c.id) && (
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200">
+                            Joined
+                          </span>
+                        )}
+                      </div>
+                      <Image
+                        src="/Contests/logo.png"
+                        alt="Contest logo"
+                        width={120}
+                        height={32}
+                        className="w-[120px] h-auto opacity-90"
+                      />
                     </div>
                   </div>
                 </div>

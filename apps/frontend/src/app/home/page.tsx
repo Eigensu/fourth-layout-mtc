@@ -209,7 +209,7 @@ export default function HomePage() {
                 </div>
               )}
               {loadingContests ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 auto-rows-fr">
                   {Array.from({ length: 4 }).map((_, i) => (
                     <div
                       key={i}
@@ -222,7 +222,7 @@ export default function HomePage() {
                   No active contests right now. Check back soon!
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 auto-rows-fr">
                   {activeContests.map((c) => (
                     <div
                       key={c.id}
@@ -235,7 +235,7 @@ export default function HomePage() {
                           router.push(`/contests/${c.id}`);
                         }
                       }}
-                      className="bg-white/80 backdrop-blur-sm rounded-2xl border border-primary-100 p-5 shadow-sm cursor-pointer hover:shadow md:transition"
+                      className="bg-white/80 backdrop-blur-sm rounded-2xl border border-primary-100 p-5 shadow-sm cursor-pointer hover:shadow md:transition min-h-[140px] h-full"
                     >
                       <div className="flex items-start justify-between">
                         <div className="min-w-0">
@@ -247,51 +247,61 @@ export default function HomePage() {
                               {c.description}
                             </p>
                           )}
+                          <div className="text-xs text-gray-500 mt-1">
+                            Ends: {new Date(c.end_at).toLocaleString()}
+                          </div>
+                          <div className="mt-2 flex items-center gap-2">
+                            {!joinedContestIds.has(c.id) ? (
+                              isAuthenticated ? (
+                                <Link
+                                  href={`/contests/${c.id}`}
+                                  className="inline-flex justify-center items-center px-4 py-2 rounded-lg bg-gradient-primary text-white text-sm font-medium shadow hover:opacity-95"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  Join Contest
+                                </Link>
+                              ) : (
+                                <Link
+                                  href={`${ROUTES.LOGIN}?next=${encodeURIComponent(`/contests/${c.id}/team`)}`}
+                                  className="inline-flex justify-center items-center px-4 py-2 rounded-lg bg-gradient-primary text-white text-sm font-medium shadow hover:opacity-95"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  Login to Join Contest
+                                </Link>
+                              )
+                            ) : (
+                              <Link
+                                href={`/contests/${c.id}/leaderboard`}
+                                className="inline-flex justify-center items-center px-4 py-2 rounded-lg border text-sm font-medium text-primary-700 border-primary-200 hover:bg-primary-50"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                View Leaderboard
+                              </Link>
+                            )}
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-red-50 text-red-700 border border-red-200 inline-flex items-center gap-1">
-                            <span className="h-1.5 w-1.5 rounded-full bg-red-600 animate-pulse"></span>
-                            LIVE
-                          </span>
-                          {joinedContestIds.has(c.id) && (
-                            <span className="text-xs px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200">
-                              Joined
+                        <div className="flex flex-col items-end gap-2 shrink-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-red-50 text-red-700 border border-red-200 inline-flex items-center gap-1">
+                              <span className="h-1.5 w-1.5 rounded-full bg-red-600 animate-pulse"></span>
+                              LIVE
                             </span>
-                          )}
+                            {joinedContestIds.has(c.id) && (
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200">
+                                Joined
+                              </span>
+                            )}
+                          </div>
+                          <Image
+                            src="/Contests/logo.png"
+                            alt="Contest logo"
+                            width={120}
+                            height={32}
+                            className="w-[120px] h-auto opacity-90"
+                          />
                         </div>
                       </div>
-                      <div className="text-xs text-gray-500 mt-2">
-                        Ends: {new Date(c.end_at).toLocaleString()}
-                      </div>
-                      <div className="mt-4 flex items-center gap-2">
-                        {!joinedContestIds.has(c.id) ? (
-                          isAuthenticated ? (
-                            <Link
-                              href={`/contests/${c.id}`}
-                              className="inline-flex justify-center items-center px-4 py-2 rounded-lg bg-gradient-primary text-white text-sm font-medium shadow hover:opacity-95"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              Join Contest
-                            </Link>
-                          ) : (
-                            <Link
-                              href={`${ROUTES.LOGIN}?next=${encodeURIComponent(`/contests/${c.id}/team`)}`}
-                              className="inline-flex justify-center items-center px-4 py-2 rounded-lg bg-gradient-primary text-white text-sm font-medium shadow hover:opacity-95"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              Login to Join Contest
-                            </Link>
-                          )
-                        ) : (
-                          <Link
-                            href={`/contests/${c.id}/leaderboard`}
-                            className="inline-flex justify-center items-center px-4 py-2 rounded-lg border text-sm font-medium text-primary-700 border-primary-200 hover:bg-primary-50"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            View Leaderboard
-                          </Link>
-                        )}
-                      </div>
+                      
                     </div>
                   ))}
                 </div>
@@ -319,11 +329,11 @@ export default function HomePage() {
                   No upcoming contests at the moment.
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 auto-rows-fr">
                   {upcomingContests.map((c) => (
                     <div
                       key={c.id}
-                      className="bg-white/80 backdrop-blur-sm rounded-2xl border border-primary-100 p-5 shadow-sm"
+                      className="bg-white/80 backdrop-blur-sm rounded-2xl border border-primary-100 p-5 shadow-sm min-h-[140px] h-full"
                     >
                       <div className="flex items-start justify-between">
                         <div className="min-w-0">
@@ -336,15 +346,24 @@ export default function HomePage() {
                             </p>
                           )}
                         </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 border border-gray-200">
-                            UPCOMING
-                          </span>
-                          {joinedContestIds.has(c.id) && (
-                            <span className="text-xs px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200">
-                              Joined
+                        <div className="flex flex-col items-end gap-2 shrink-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 border border-gray-200">
+                              UPCOMING
                             </span>
-                          )}
+                            {joinedContestIds.has(c.id) && (
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200">
+                                Joined
+                              </span>
+                            )}
+                          </div>
+                          <Image
+                            src="/Contests/logo.png"
+                            alt="Contest logo"
+                            width={120}
+                            height={32}
+                            className="w-[120px] h-auto opacity-90"
+                          />
                         </div>
                       </div>
                       <div className="text-xs text-gray-500 mt-2">

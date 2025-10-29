@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Image from "next/image";
 import { useAuth } from "@/contexts/AuthContext";
 import { BarChart3, User, Crown } from "lucide-react";
 import {
@@ -56,15 +57,28 @@ export default function ContestDetailsPage() {
       {contest && (
         <>
           {/* Header: subtle badge + big gradient title */}
-          <div className="text-center mb-10 -mt-12">
-            <div className="relative inline-block mb-2">
-              <Crown className="w-8 h-8 text-primary-500/70 absolute -top-4 -left-6 hidden sm:block" />
-              <Crown className="w-8 h-8 text-primary-500/70 absolute -top-4 -right-6 hidden sm:block" />
-              <div className="text-4xl sm:text-6xl font-black tracking-tight bg-gradient-to-r from-primary-300 to-primary-700 bg-clip-text text-transparent px-4">
-                Contest
-              </div>
+          {/* <div className="relative inline-block mb-0 -mt-24">
+            <Crown className="w-8 h-8 text-primary-500/70 absolute -top-4 -left-6 hidden sm:block" />
+            <Crown className="w-8 h-8 text-primary-500/70 absolute -top-4 -right-6 hidden sm:block" />
+            <div className="text-4xl sm:text-4xl font-black tracking-tight bg-gradient-to-r from-primary-300 to-primary-700 bg-clip-text text-transparent px-4">
+              Contests
             </div>
-            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-primary-700">
+          </div> */}
+          <div className="text-center mb-2 -mt-24">
+            <div className="flex justify-center -mt-6">
+              <Image
+                src="/TPL S11 Sponsor/Title Sponsor.png"
+                alt="Title Sponsor"
+                width={140}
+                height={140}
+                className="h-24 w-auto sm:h-36 object-contain"
+                priority
+              />
+            </div>
+            <div className="-mt-8 text-xs sm:text-sm font-semibold text-primary-700 tracking-wide">
+              presents
+            </div>
+            <h1 className="mt-2 text-2xl sm:text-4xl lg:text-3xl font-bold tracking-tight text-primary-700 leading-tight">
               {contest.name}
             </h1>
           </div>

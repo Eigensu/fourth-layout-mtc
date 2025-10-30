@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { Card, CardBody } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
 import { adminContestsApi, Contest, ContestCreate, ContestType } from "@/lib/api/admin/contests";
 import { API_BASE_URL } from "@/common/consts";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
@@ -28,6 +30,12 @@ export default function AdminContestsPage() {
   const [availableTeams, setAvailableTeams] = useState<string[]>([]);
   const [selectedAllowedTeams, setSelectedAllowedTeams] = useState<string[]>([]);
   const [allowedDropdownOpen, setAllowedDropdownOpen] = useState<boolean>(false);
+
+  // IST inputs for start/end (date + free time HH:MM 24h)
+  const [startDate, setStartDate] = useState(""); // yyyy-MM-dd
+  const [startTime, setStartTime] = useState(""); // HH:MM (24h)
+  const [endDate, setEndDate] = useState("");
+  const [endTime, setEndTime] = useState(""); // HH:MM (24h)
 
   // Alert dialog
   const [alertOpen, setAlertOpen] = useState(false);
@@ -82,6 +90,30 @@ export default function AdminContestsPage() {
     })();
   }, []);
 
+  // Seed IST defaults for create form (now and +1 day) using 24-hour HH:MM
+  useEffect(() => {
+    const seedISTDefaults = () => {
+      const now = new Date();
+      const utcNow = now.getTime() + now.getTimezoneOffset() * 60000;
+      const istNow = new Date(utcNow + (5 * 60 + 30) * 60000);
+      const istEnd = new Date(istNow.getTime() + 24 * 3600 * 1000);
+      const pad = (n: number) => String(n).padStart(2, "0");
+      const toParts = (d: Date) => {
+        const yyyy = d.getFullYear();
+        const mm = pad(d.getMonth() + 1);
+        const dd = pad(d.getDate());
+        const hh24 = pad(d.getHours());
+        const mi = pad(d.getMinutes());
+        return { date: `${yyyy}-${mm}-${dd}`, time: `${hh24}:${mi}` };
+      };
+      const s = toParts(istNow);
+      const e = toParts(istEnd);
+      setStartDate(s.date); setStartTime(s.time);
+      setEndDate(e.date); setEndTime(e.time);
+    };
+    seedISTDefaults();
+  }, []);
+
   const create = async () => {
     try {
       setCreating(true);
@@ -89,13 +121,35 @@ export default function AdminContestsPage() {
         showAlert("Code and Name are required", "Validation");
         return;
       }
+      // Validate schedule inputs
+      if (!startDate || !startTime || !endDate || !endTime) {
+        showAlert("Start and End date/time are required", "Validation");
+        return;
+      }
+      const formToNaiveIso = (dateStr: string, hhmm24: string) => {
+        const [yyyy, mm, dd] = dateStr.split("-").map(Number);
+        const [hhStr, miStr] = hhmm24.split(":");
+        const hh = Number(hhStr);
+        const mi = Number(miStr);
+        const pad = (n: number) => String(n).padStart(2, "0");
+        return `${pad(yyyy)}-${pad(mm)}-${pad(dd)}T${pad(hh)}:${pad(mi)}:00`;
+      };
+      const startIso = formToNaiveIso(startDate, startTime);
+      const endIso = formToNaiveIso(endDate, endTime);
+      if (startIso >= endIso) {
+        showAlert("Start must be before End", "Validation");
+        return;
+      }
       const payload: ContestCreate = {
         ...form,
+        start_at: startIso,
+        end_at: endIso,
         // Only send allowed_teams for daily contests; clear otherwise
         allowed_teams: form.contest_type === "daily" ? selectedAllowedTeams : [],
       };
       await adminContestsApi.create(payload);
       setForm({ ...form, code: "", name: "" });
+      // Reset only code/name; keep IST inputs seeded
       setSelectedAllowedTeams([]);
       await load();
     } catch (e: any) {
@@ -149,7 +203,7 @@ export default function AdminContestsPage() {
 
   return (
     <ProtectedRoute>
-      <div className="max-w-5xl mx-auto p-4">
+      <div className="max-w-5xl mx-auto p-4 space-y-4">
         <AlertDialog open={alertOpen} title={alertTitle} message={alertMessage} onClose={() => setAlertOpen(false)} />
         <ConfirmDialog
           open={showDeleteDialog}
@@ -173,14 +227,15 @@ export default function AdminContestsPage() {
           onCancel={() => { if (!deleting) { setShowForceDeleteDialog(false); } }}
           onConfirm={confirmForceDelete}
         />
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold">Admin · Contests</h1>
           <Link href="/admin" className="px-3 py-1 rounded border hover:bg-gray-50">Back</Link>
         </div>
 
-        <div className="border rounded p-4 mb-6">
-          <h2 className="text-lg font-medium mb-2">Create Contest</h2>
-          <div className="grid gap-2 sm:grid-cols-2">
+        <Card>
+          <CardBody className="p-4">
+            <h2 className="text-lg font-medium mb-2">Create Contest</h2>
+            <div className="grid gap-2 sm:grid-cols-2">
             <div>
               <label className="block text-sm">Code</label>
               <input className="w-full border p-2 rounded" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} />
@@ -190,12 +245,18 @@ export default function AdminContestsPage() {
               <input className="w-full border p-2 rounded" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             </div>
             <div>
-              <label className="block text-sm">Start</label>
-              <input type="datetime-local" className="w-full border p-2 rounded" value={new Date(form.start_at).toISOString().slice(0,16)} onChange={(e) => setForm({ ...form, start_at: new Date(e.target.value).toISOString() })} />
+              <label className="block text-sm">Start (IST)</label>
+              <div className="flex gap-2">
+                <input type="date" className="border p-2 rounded" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                <input type="time" step={60} className="border p-2 rounded w-28" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+              </div>
             </div>
             <div>
-              <label className="block text-sm">End</label>
-              <input type="datetime-local" className="w-full border p-2 rounded" value={new Date(form.end_at).toISOString().slice(0,16)} onChange={(e) => setForm({ ...form, end_at: new Date(e.target.value).toISOString() })} />
+              <label className="block text-sm">End (IST)</label>
+              <div className="flex gap-2">
+                <input type="date" className="border p-2 rounded" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                <input type="time" step={60} className="border p-2 rounded w-28" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
+              </div>
             </div>
             <div>
               <label className="block text-sm">Visibility</label>
@@ -300,29 +361,43 @@ export default function AdminContestsPage() {
                 <p className="text-xs text-gray-500">Only players whose team is in the allowed list will be selectable for this daily contest.</p>
               </div>
             )}
-          </div>
-          <button className="mt-3 px-4 py-2 rounded bg-blue-600 text-white" disabled={creating} onClick={create}>
-            {creating ? "Creating..." : "Create"}
-          </button>
-        </div>
+            </div>
+            <Button className="mt-3" disabled={creating} onClick={create}>
+              {creating ? "Creating..." : "Create"}
+            </Button>
+          </CardBody>
+        </Card>
 
         {loading && <div>Loading...</div>}
         {error && <div className="text-red-600">{error}</div>}
 
         <div className="grid gap-3">
           {contests.map((c) => (
-            <div key={c.id} className="border rounded p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-medium">{c.name}</div>
-                  <div className="text-sm text-gray-600">{c.code} · {c.status} · {c.visibility}</div>
+            <Card key={c.id} hover>
+              <CardBody className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="font-medium">{c.name}</div>
+                    <div className="text-sm text-gray-600">{c.code} · {c.status} · {c.visibility}</div>
+                    <div className="text-xs text-gray-700 mt-1">
+                      {(() => {
+                        const fmt = (iso: string) => {
+                          const d = new Date(iso);
+                          const utc = d.getTime() + d.getTimezoneOffset() * 60000;
+                          const ist = new Date(utc + (5 * 60 + 30) * 60000);
+                          return ist.toLocaleString(undefined, { year: "numeric", month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: true });
+                        };
+                        return <span>{fmt(c.start_at)} – {fmt(c.end_at)} IST</span>;
+                      })()}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Link href={`/admin/contests/${c.id}`} className="px-3 py-1 rounded border">Manage</Link>
+                    <button className="px-3 py-1 rounded border text-red-700" onClick={() => remove(c.id)}>Delete</button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Link href={`/admin/contests/${c.id}`} className="px-3 py-1 rounded border">Manage</Link>
-                  <button className="px-3 py-1 rounded border text-red-700" onClick={() => remove(c.id)}>Delete</button>
-                </div>
-              </div>
-            </div>
+              </CardBody>
+            </Card>
           ))}
           {!loading && contests.length === 0 && (
             <div className="text-gray-600">No contests yet.</div>

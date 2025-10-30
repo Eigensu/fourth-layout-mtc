@@ -6,6 +6,7 @@ import { Card, CardBody } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Search, Trophy, Calendar } from "lucide-react";
 import { adminContestsApi, Contest } from "@/lib/api/admin/contests";
+import { formatISTRange } from "@/lib/utils";
 
 export function ContestsSection() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -80,9 +81,7 @@ export function ContestsSection() {
               <div className="space-y-3">
                 <div className="flex items-center gap-3 text-sm text-gray-600">
                   <Calendar className="w-4 h-4" />
-                  <span>
-                    {new Date(contest.start_at).toLocaleDateString()} - {new Date(contest.end_at).toLocaleDateString()}
-                  </span>
+                  <span>{formatISTRange(contest.start_at, contest.end_at)}</span>
                 </div>
               </div>
               <div className="mt-4 pt-4 border-t border-gray-200 flex gap-2">

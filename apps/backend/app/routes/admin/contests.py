@@ -1,7 +1,9 @@
-from fastapi import APIRouter, HTTPException, Query, Depends
-from typing import Optional, List, Dict
-from datetime import datetime
+from fastapi import APIRouter, Depends, HTTPException, status as http_status, Query
+from typing import Optional, List
 from beanie import PydanticObjectId
+from datetime import datetime
+from bson import ObjectId
+from app.utils.timezone import now_ist, to_ist
 from pydantic import BaseModel
 
 from app.models.contest import Contest
@@ -33,15 +35,15 @@ async def to_response(contest: Contest) -> ContestResponse:
         code=contest.code,
         name=contest.name,
         description=contest.description,
-        start_at=contest.start_at,
-        end_at=contest.end_at,
+        start_at=to_ist(contest.start_at),
+        end_at=to_ist(contest.end_at),
         status=contest.status,
         visibility=contest.visibility,
         points_scope=contest.points_scope,
         contest_type=contest.contest_type,
         allowed_teams=contest.allowed_teams or [],
-        created_at=contest.created_at,
-        updated_at=contest.updated_at,
+        created_at=to_ist(contest.created_at),
+        updated_at=to_ist(contest.updated_at),
     )
 
 
@@ -57,7 +59,7 @@ async def create_contest(
     if existing:
         raise HTTPException(status_code=400, detail="Contest code already exists")
 
-    now = datetime.utcnow()
+    now = now_ist()
     contest = Contest(
         code=data.code,
         name=data.name,
@@ -135,7 +137,7 @@ async def update_contest(
 
     for k, v in update_fields.items():
         setattr(contest, k, v)
-    contest.updated_at = datetime.utcnow()
+    contest.updated_at = now_ist()
     await contest.save()
     return await to_response(contest)
 
@@ -163,7 +165,7 @@ async def delete_contest(
                 "status": EnrollmentStatus.ACTIVE,
             }):
                 enr.status = EnrollmentStatus.REMOVED
-                enr.removed_at = datetime.utcnow()
+                enr.removed_at = now_ist()
                 await enr.save()
         else:
             raise HTTPException(status_code=409, detail="Contest has active enrollments. Use force=true to unenroll and delete.")
@@ -211,13 +213,13 @@ async def enroll_teams(
             user_id=team.user_id,
             contest_id=contest.id,
             status=EnrollmentStatus.ACTIVE,
-            enrolled_at=datetime.utcnow(),
+            enrolled_at=now_ist(),
         )
         await enr.insert()
         # Persist contest_id on the team for convenience
         try:
             team.contest_id = str(contest.id)
-            team.updated_at = datetime.utcnow()
+            team.updated_at = now_ist()
             await team.save()
         except Exception:
             # Do not fail enrollment if team update fails
@@ -257,7 +259,7 @@ async def unenroll(
             enr = await TeamContestEnrollment.get(eid)
             if enr and enr.contest_id == contest.id and enr.status == "active":
                 enr.status = "removed"
-                enr.removed_at = datetime.utcnow()
+                enr.removed_at = now_ist()
                 await enr.save()
                 count += 1
                 affected_team_ids.add(enr.team_id)
@@ -275,7 +277,7 @@ async def unenroll(
             )
             if enr:
                 enr.status = EnrollmentStatus.REMOVED
-                enr.removed_at = datetime.utcnow()
+                enr.removed_at = now_ist()
                 await enr.save()
                 count += 1
                 affected_team_ids.add(toid)
@@ -298,7 +300,7 @@ async def unenroll(
                 team = await Team.get(tid)
                 if team and team.contest_id is not None:
                     team.contest_id = None
-                    team.updated_at = datetime.utcnow()
+                    team.updated_at = now_ist()
                     await team.save()
         except Exception:
             # Best-effort cleanup; ignore errors
@@ -383,7 +385,7 @@ async def upsert_player_points(
 
     # Upsert
     updated_docs: list[PlayerContestPoints] = []
-    now = datetime.utcnow()
+    now = now_ist()
     for poid, pts in valid_items:
         existing = await PlayerContestPoints.find_one({
             "contest_id": contest.id,
@@ -430,7 +432,7 @@ async def upsert_player_points(
                     player = await Player.get(doc.player_id)
                     if player:
                         player.points = float(doc.points or 0.0)
-                        player.updated_at = datetime.utcnow()
+                        player.updated_at = now_ist()
                         await player.save()
                 except Exception:
                     # continue best-effort for each player, do not fail the response

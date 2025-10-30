@@ -4,6 +4,28 @@ export function cn(...inputs: ClassValue[]) {
   return clsx(inputs)
 }
 
+export function formatIST(iso: string): string {
+  try {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return iso;
+    return d.toLocaleString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+      timeZone: 'Asia/Kolkata',
+    });
+  } catch {
+    return iso;
+  }
+}
+
+export function formatISTRange(startIso: string, endIso: string): string {
+  return `${formatIST(startIso)} – ${formatIST(endIso)} IST`;
+}
+
 export function formatPoints(points: number): string {
   return points.toLocaleString()
 }

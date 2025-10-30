@@ -4,11 +4,8 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Trophy } from "lucide-react";
 import { useRouter } from "next/navigation";
-import {
-  publicContestsApi,
-  Contest,
-  type EnrollmentResponse,
-} from "@/lib/api/public/contests";
+import { publicContestsApi, Contest, type EnrollmentResponse } from "@/lib/api/public/contests";
+import { formatIST, formatISTRange } from "@/lib/utils";
 import { PillNavbar } from "@/components/navigation/PillNavbar";
 import { MobileUserMenu } from "@/components/navigation/MobileUserMenu";
 import { useAuth } from "@/contexts/AuthContext";
@@ -102,8 +99,7 @@ export default function ContestsPage() {
                       </p>
                     )}
                     <div className="text-[11px] sm:text-xs text-gray-500 mt-1 leading-snug">
-                      {new Date(c.start_at).toLocaleString()} –{" "}
-                      {new Date(c.end_at).toLocaleString()}
+                      {formatISTRange(c.start_at, c.end_at)}
                     </div>
                     <div className="mt-2 flex items-center gap-2">
                       {joinedContestIds.has(c.id) ? (
@@ -176,8 +172,7 @@ export default function ContestsPage() {
                         </p>
                       )}
                       <div className="text-[11px] sm:text-xs text-gray-500 mt-1 leading-snug">
-                        Starts: {new Date(c.start_at).toLocaleString()} · Ends:{" "}
-                        {new Date(c.end_at).toLocaleString()}
+                        Starts: {formatIST(c.start_at)} IST · Ends: {formatIST(c.end_at)} IST
                       </div>
                       <div className="mt-2 flex items-center gap-2">
                         {joinedContestIds.has(c.id) ? (

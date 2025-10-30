@@ -3,6 +3,7 @@ from pydantic import Field
 from datetime import datetime
 from typing import Optional, List
 from app.common.enums.contests import ContestStatus, ContestVisibility, PointsScope, ContestType
+from app.utils.timezone import now_ist
 
 
 class Contest(Document):
@@ -32,8 +33,8 @@ class Contest(Document):
     # list of allowed real-world team names (Player.team) for daily contests
     allowed_teams: List[str] = Field(default_factory=list)
 
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=now_ist)
+    updated_at: datetime = Field(default_factory=now_ist)
 
     class Settings:
         name = "contests"

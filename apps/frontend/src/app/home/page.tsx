@@ -318,7 +318,6 @@ export default function HomePage() {
                           />
                         </div>
                       </div>
-
                     </div>
                   ))}
                 </div>
@@ -350,18 +349,77 @@ export default function HomePage() {
                   {upcomingContests.map((c) => (
                     <div
                       key={c.id}
-                      className="bg-white/80 backdrop-blur-sm rounded-2xl border border-primary-100 p-5 shadow-sm min-h-[140px] h-full"
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => router.push(`/contests/${c.id}`)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          router.push(`/contests/${c.id}`);
+                        }
+                      }}
+                      className="bg-white/80 backdrop-blur-sm rounded-2xl border border-primary-100 p-5 shadow-sm cursor-pointer hover:shadow md:transition min-h-[140px] h-full"
                     >
                       <div className="flex items-start justify-between">
                         <div className="min-w-0">
-                          <h3 className="text-lg sm:text-xl font-semibold text-gray-900 whitespace-normal break-words overflow-visible hyphens-auto">
+                          <h3 className="text-lg sm:text-xl font-semibold text-gray-900 break-words whitespace-normal overflow-visible hyphens-auto">
                             {c.name}
                           </h3>
                           {c.description && (
-                            <p className="text-sm text-gray-600 mt-0.5">
+                            <p className="text-sm text-gray-600 mt-0.5 line-clamp-2">
                               {c.description}
                             </p>
                           )}
+                          <div className="text-xs text-gray-500 mt-1">
+                            {(() => {
+                              const fmtIST = (iso: string) => {
+                                const d = new Date(iso);
+                                const utc =
+                                  d.getTime() + d.getTimezoneOffset() * 60000;
+                                const ist = new Date(
+                                  utc + (5 * 60 + 30) * 60000
+                                );
+                                return ist.toLocaleString(undefined, {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "2-digit",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                  hour12: true,
+                                });
+                              };
+                              return `Starts: ${fmtIST(c.start_at)} IST`;
+                            })()}
+                          </div>
+                          <div className="mt-2 flex items-center gap-2">
+                            {!joinedContestIds.has(c.id) ? (
+                              isAuthenticated ? (
+                                <Link
+                                  href={`/contests/${c.id}`}
+                                  className="inline-flex justify-center items-center px-4 py-2 rounded-lg bg-gradient-primary text-white text-sm font-medium shadow hover:opacity-95"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  Join Contest
+                                </Link>
+                              ) : (
+                                <Link
+                                  href={`${ROUTES.LOGIN}?next=${encodeURIComponent(`/contests/${c.id}/team`)}`}
+                                  className="inline-flex justify-center items-center px-4 py-2 rounded-lg bg-gradient-primary text-white text-sm font-medium shadow hover:opacity-95"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  Login to Join Contest
+                                </Link>
+                              )
+                            ) : (
+                              <Link
+                                href={`/contests/${c.id}/leaderboard`}
+                                className="inline-flex justify-center items-center px-4 py-2 rounded-lg border text-sm font-medium text-primary-700 border-primary-200 hover:bg-primary-50"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                View Leaderboard
+                              </Link>
+                            )}
+                          </div>
                         </div>
                         <div className="flex flex-col items-end gap-2 shrink-0">
                           <div className="flex items-center gap-2">
@@ -383,35 +441,7 @@ export default function HomePage() {
                           />
                         </div>
                       </div>
-                      <div className="text-xs text-gray-500 mt-2">
-                        Starts: {new Date(c.start_at).toLocaleString()}
-                      </div>
-                      <div className="mt-4 flex items-center gap-2">
-                        {!joinedContestIds.has(c.id) ? (
-                          isAuthenticated ? (
-                            <Link
-                              href={`/contests/${c.id}`}
-                              className="inline-flex justify-center items-center px-4 py-2 rounded-lg bg-gradient-primary text-white text-sm font-medium shadow hover:opacity-95 w-full sm:w-auto"
-                            >
-                              Join Contest
-                            </Link>
-                          ) : (
-                            <Link
-                              href={`${ROUTES.LOGIN}?next=${encodeURIComponent(`/contests/${c.id}/team`)}`}
-                              className="inline-flex justify-center items-center px-4 py-2 rounded-lg bg-gradient-primary text-white text-sm font-medium shadow hover:opacity-95 w-full sm:w-auto"
-                            >
-                              Login to Join Contest
-                            </Link>
-                          )
-                        ) : (
-                          <Link
-                            href={`/contests/${c.id}/team`}
-                            className="inline-flex justify-center items-center px-4 py-2 rounded-lg border text-sm font-medium text-primary-700 border-primary-200 hover:bg-primary-50 w-full sm:w-auto"
-                          >
-                            Edit Team
-                          </Link>
-                        )}
-                      </div>
+                      
                     </div>
                   ))}
                 </div>

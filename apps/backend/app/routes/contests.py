@@ -5,6 +5,7 @@ from beanie.operators import Or, RegEx
 from datetime import datetime
 from pydantic import BaseModel
 from bson import ObjectId
+from app.utils.timezone import now_ist, to_ist
 
 from app.models.contest import Contest
 from app.models.team_contest_enrollment import TeamContestEnrollment
@@ -43,10 +44,13 @@ class ContestTeamResponse(BaseModel):
     players: List[ContestTeamPlayerSchema]
 
 def _compute_status(contest: Contest) -> ContestStatus:
-    now = datetime.utcnow()
-    if contest.end_at <= now:
+    now = now_ist()
+    # Ensure contest times are in IST for comparison
+    start = to_ist(contest.start_at)
+    end = to_ist(contest.end_at)
+    if end <= now:
         return ContestStatus.COMPLETED
-    if contest.start_at <= now < contest.end_at:
+    if start <= now < end:
         return ContestStatus.LIVE
     return ContestStatus.UPCOMING
 
@@ -57,7 +61,7 @@ async def to_contest_response(contest: Contest) -> ContestResponse:
     # Persist drift if needed (except when archived which is manual terminal state)
     if contest.status != computed and contest.status != ContestStatus.ARCHIVED:
         contest.status = computed
-        contest.updated_at = datetime.utcnow()
+        contest.updated_at = now_ist()
         try:
             await contest.save()
         except Exception:
@@ -68,15 +72,15 @@ async def to_contest_response(contest: Contest) -> ContestResponse:
         code=contest.code,
         name=contest.name,
         description=contest.description,
-        start_at=contest.start_at,
-        end_at=contest.end_at,
+        start_at=to_ist(contest.start_at),
+        end_at=to_ist(contest.end_at),
         status=computed,
         visibility=contest.visibility,
         points_scope=contest.points_scope,
         contest_type=contest.contest_type,
         allowed_teams=contest.allowed_teams or [],
-        created_at=contest.created_at,
-        updated_at=contest.updated_at,
+        created_at=to_ist(contest.created_at),
+        updated_at=to_ist(contest.updated_at),
     )
 
 
@@ -107,7 +111,7 @@ async def list_public_contests(
     conditions = [Contest.visibility == ContestVisibility.PUBLIC]
 
     # If a status filter is provided, translate it into time-window constraints
-    now = datetime.utcnow()
+    now = now_ist()
     if status == ContestStatus.LIVE:
         conditions.append(Contest.start_at <= now)
         conditions.append(Contest.end_at > now)
@@ -394,7 +398,7 @@ async def enroll_in_contest(
         contest_id=contest.id,
         user_id=current_user.id,
         status=EnrollmentStatus.ACTIVE,
-        enrolled_at=datetime.utcnow(),
+        enrolled_at=now_ist(),
     )
     await enr.insert()
 

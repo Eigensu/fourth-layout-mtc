@@ -2,27 +2,29 @@
 
 import React from "react";
 import { Avatar } from "@/components/ui/Avatar";
-import { Trophy, Medal, TrendingUp, TrendingDown } from "lucide-react";
+import { Trophy, TrendingUp, TrendingDown } from "lucide-react";
 import { LeaderboardEntry } from "@/types/leaderboard";
 
 interface LeaderboardCardProps {
   entry: LeaderboardEntry;
   isCurrentUser?: boolean;
   showTopThree?: boolean;
+  action?: React.ReactNode;
 }
 
 export const LeaderboardCard: React.FC<LeaderboardCardProps> = ({
   entry,
   isCurrentUser = false,
   showTopThree = false,
+  action,
 }) => {
   const getRankIcon = (rank: number) => {
     if (rank === 1) {
       return <Trophy className="w-6 h-6 text-yellow-500" />;
     } else if (rank === 2) {
-      return <Medal className="w-6 h-6 text-gray-400" />;
+      return <Trophy className="w-6 h-6 text-gray-400" />;
     } else if (rank === 3) {
-      return <Medal className="w-6 h-6 text-amber-600" />;
+      return <Trophy className="w-6 h-6 text-amber-600" />;
     }
     return null;
   };
@@ -68,10 +70,20 @@ export const LeaderboardCard: React.FC<LeaderboardCardProps> = ({
 
   // Top 3 podium card style (larger, more prominent)
   if (showTopThree && entry.rank <= 3) {
+    const containerClasses = (() => {
+      // Borders per rank and subtle radial fill
+      const base = "rounded-2xl sm:rounded-3xl transition-all duration-300 relative overflow-hidden";
+      if (entry.rank === 1)
+        return `${base} sm:scale-100 border-2 border-yellow-500 bg-[radial-gradient(circle_at_center,transparent_0%,theme(colors.yellow.100)_100%)] p-5 sm:p-6 hover:shadow-xl`;
+      if (entry.rank === 2)
+        return `${base} sm:scale-95 border-2 border-gray-400 bg-[radial-gradient(circle_at_center,transparent_0%,theme(colors.gray.200)_100%)] p-3 sm:p-4 hover:shadow-xl`;
+      if (entry.rank === 3)
+        return `${base} sm:scale-90 border-2 border-amber-600 bg-[radial-gradient(circle_at_center,transparent_0%,theme(colors.orange.100)_100%)] p-2 sm:p-3 hover:shadow-xl`;
+      return `${base} bg-white p-3 sm:p-4 hover:shadow-xl`;
+
+    })();
     return (
-      <div
-        className={`${getBackgroundClass()} rounded-2xl sm:rounded-3xl p-4 sm:p-6 transition-all duration-300 hover:shadow-xl relative overflow-hidden`}
-      >
+      <div className={containerClasses}>
         {/* Background decoration */}
         <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-gradient-to-br from-primary-200/30 to-transparent rounded-full -mr-12 sm:-mr-16 -mt-12 sm:-mt-16" />
 
@@ -83,14 +95,17 @@ export const LeaderboardCard: React.FC<LeaderboardCardProps> = ({
           <div className="relative mb-3 sm:mb-4">
             <Avatar
               name={entry.displayName}
+              src={entry.avatarUrl}
               size="lg"
-              className="sm:w-20 sm:h-20"
+              className={
+                entry.rank === 1
+                  ? "sm:w-20 sm:h-20"
+                  : entry.rank === 2
+                    ? "sm:w-16 sm:h-16"
+                    : "sm:w-14 sm:h-14"
+              }
             />
-            {entry.rank === 1 && (
-              <div className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 bg-yellow-500 text-white rounded-full w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center text-xs sm:text-sm font-bold shadow-lg">
-                1
-              </div>
-            )}
+            {/* Removed number badge for rank 1 as per request */}
           </div>
 
           {/* User info */}
@@ -103,9 +118,20 @@ export const LeaderboardCard: React.FC<LeaderboardCardProps> = ({
             </p>
           </div>
 
+          {/* Optional action (e.g., View Team) */}
+          {action && <div className="mt-1 sm:mt-2">{action}</div>}
+
           {/* Points */}
           <div className="mt-2 sm:mt-3">
-            <p className="text-2xl sm:text-3xl font-bold text-primary-600">
+            <p
+              className={
+                entry.rank === 1
+                  ? "text-2xl sm:text-3xl font-bold text-primary-600"
+                  : entry.rank === 2
+                    ? "text-xl sm:text-2xl font-bold text-primary-600"
+                    : "text-lg sm:text-xl font-bold text-primary-600"
+              }
+            >
               {entry.points.toLocaleString()}
             </p>
             <p className="text-[10px] sm:text-xs text-gray-500 mt-1">points</p>
@@ -135,6 +161,7 @@ export const LeaderboardCard: React.FC<LeaderboardCardProps> = ({
           <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
             <Avatar
               name={entry.displayName}
+              src={entry.avatarUrl}
               size="md"
               className="flex-shrink-0 hidden xs:block"
             />
@@ -149,15 +176,20 @@ export const LeaderboardCard: React.FC<LeaderboardCardProps> = ({
           </div>
         </div>
 
-        {/* Right side: Points and rank change */}
+        {/* Right side: Action, Points and rank change */}
         <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 sm:gap-3 flex-shrink-0">
+          {action && (
+            <div className="order-2 sm:order-1">
+              {action}
+            </div>
+          )}
           {/* Rank change indicator - hide on very small screens */}
-          <div className="hidden sm:block">
+          <div className="hidden sm:block order-1 sm:order-2">
             {getRankChangeIndicator(entry.rankChange)}
           </div>
 
           {/* Points */}
-          <div className="text-right">
+          <div className="text-right order-3">
             <p className="text-lg sm:text-2xl font-bold text-primary-600 leading-tight">
               {entry.points.toLocaleString()}
             </p>

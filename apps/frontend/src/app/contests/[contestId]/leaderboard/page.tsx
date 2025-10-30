@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { LeaderboardCard, LeaderboardSkeleton } from "@/components/leaderboard";
+import { TeamDialog } from "@/components/leaderboard/TeamDialog";
 import { publicContestsApi, type Contest, type LeaderboardResponse as ContestLeaderboardResponse } from "@/lib/api/public/contests";
 import type { LeaderboardEntry as SharedLeaderboardEntry } from "@/types/leaderboard";
 import { Trophy } from "lucide-react";
@@ -17,6 +18,8 @@ export default function ContestLeaderboardTabPage() {
   const [leaderboard, setLeaderboard] = useState<ContestLeaderboardResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [teamDialogOpen, setTeamDialogOpen] = useState(false);
+  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!contestId) return;
@@ -43,6 +46,7 @@ export default function ContestLeaderboardTabPage() {
   }, [contestId]);
 
   return (
+    <>
     <div className="py-4 sm:py-6">
       {/* Loading */}
       {isLoading && <LeaderboardSkeleton />}
@@ -65,6 +69,8 @@ export default function ContestLeaderboardTabPage() {
               teamName: e.teamName,
               points: e.points,
               rankChange: e.rankChange ?? undefined,
+              avatarUrl: (e as any).avatarUrl ?? undefined,
+              teamId: (e as any).teamId ?? undefined,
             }));
             const currentUserEntry: SharedLeaderboardEntry | undefined = leaderboard.currentUserEntry
               ? {
@@ -74,6 +80,8 @@ export default function ContestLeaderboardTabPage() {
                   teamName: leaderboard.currentUserEntry.teamName,
                   points: leaderboard.currentUserEntry.points,
                   rankChange: leaderboard.currentUserEntry.rankChange ?? undefined,
+                  avatarUrl: (leaderboard.currentUserEntry as any).avatarUrl ?? undefined,
+                  teamId: (leaderboard.currentUserEntry as any).teamId ?? undefined,
                 }
               : undefined;
 
@@ -105,6 +113,17 @@ export default function ContestLeaderboardTabPage() {
                         key={entry.rank}
                         entry={entry}
                         isCurrentUser={currentUserEntry?.username === entry.username}
+                        action={
+                          contest?.status === "live" && entry.teamId ? (
+                            <button
+                              type="button"
+                              onClick={() => { setSelectedTeamId(entry.teamId!); setTeamDialogOpen(true); }}
+                              className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium border border-primary-200 text-primary-700 hover:bg-primary-50"
+                            >
+                              View Team
+                            </button>
+                          ) : null
+                        }
                       />
                     ))}
                   </div>
@@ -137,5 +156,12 @@ export default function ContestLeaderboardTabPage() {
         </div>
       )}
     </div>
+    <TeamDialog
+      open={teamDialogOpen}
+      contestId={String(contestId || "")}
+      teamId={selectedTeamId || ""}
+      onClose={() => setTeamDialogOpen(false)}
+    />
+    </>
   );
 }

@@ -5,6 +5,8 @@ export interface LeaderboardEntry {
   teamName: string;
   points: number;
   rankChange?: number; // positive = moved up, negative = moved down, 0 or undefined = no change
+  avatarUrl?: string;
+  teamId?: string;
 }
 
 export interface LeaderboardResponse {

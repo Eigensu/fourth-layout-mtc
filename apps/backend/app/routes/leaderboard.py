@@ -109,7 +109,6 @@ async def get_leaderboard(
 
         for idx, (team, points) in enumerate(team_points_list):
             rank = idx + 1
-            
             # Get user info for this team
             user = await User.get(team.user_id)
             if not user:
@@ -121,7 +120,8 @@ async def get_leaderboard(
                 displayName=user.full_name or user.username,
                 teamName=team.team_name,
                 points=points,
-                rankChange=team.rank_change
+                rankChange=team.rank_change,
+                avatarUrl=user.avatar_url if hasattr(user, "avatar_url") else None,
             )
             
             entries.append(entry)
@@ -134,7 +134,6 @@ async def get_leaderboard(
             entries=entries,
             currentUserEntry=current_user_entry
         )
-        
     except Exception as e:
         # In case of error, return mock data
         print(f"Error fetching leaderboard: {e}")

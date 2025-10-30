@@ -35,6 +35,8 @@ export interface LeaderboardEntry {
   teamName: string;
   points: number;
   rankChange?: number | null;
+  avatarUrl?: string | null;
+  teamId?: string | null;
 }
 
 export interface LeaderboardResponse {
@@ -59,6 +61,7 @@ export interface ContestTeamPlayer {
   price: number;
   base_points: number;
   contest_points: number;
+  slot?: string | null;
 }
 
 export interface ContestTeamResponse {

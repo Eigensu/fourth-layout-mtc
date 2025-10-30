@@ -32,6 +32,7 @@ class ContestTeamPlayerSchema(BaseModel):
     price: float = 0.0
     base_points: float = 0.0
     contest_points: float = 0.0
+    slot: Optional[str] = None
 
 class ContestTeamResponse(BaseModel):
     team_id: str
@@ -293,6 +294,8 @@ async def contest_leaderboard(
             teamName=team.team_name,
             points=points,
             rankChange=team.rank_change,
+            avatarUrl=user.avatar_url if hasattr(user, "avatar_url") else None,
+            teamId=str(team.id),
         )
         entries.append(entry)
 
@@ -307,6 +310,8 @@ async def contest_leaderboard(
                     teamName=team.team_name,
                     points=points,
                     rankChange=team.rank_change,
+                    avatarUrl=user.avatar_url if hasattr(user, "avatar_url") else None,
+                    teamId=str(team.id),
                 )
                 break
 
@@ -339,8 +344,14 @@ async def enroll_in_contest(
     tid = PydanticObjectId(body.team_id)
 
     team = await Team.get(tid)
-    if not team or team.user_id != current_user.id:
+    if not team:
         raise HTTPException(status_code=404, detail="Team not found")
+
+    # Only allow non-owners to view when contest is LIVE
+    computed_status = _compute_status(contest)
+    is_owner = current_user is not None and str(team.user_id) == str(current_user.id)
+    if not is_owner and computed_status != ContestStatus.LIVE:
+        raise HTTPException(status_code=403, detail="Team details visible when contest is live")
 
     # If daily contest with restrictions: validate team players belong to allowed teams
     if contest.contest_type == "daily" and contest.allowed_teams:
@@ -399,7 +410,7 @@ async def enroll_in_contest(
 
 
 @router.get("/{contest_id}/teams/{team_id}", response_model=ContestTeamResponse)
-async def get_team_in_contest(contest_id: str, team_id: str, current_user: User = Depends(get_current_active_user)):
+async def get_team_in_contest(contest_id: str, team_id: str, current_user: Optional[User] = Depends(get_optional_current_user)):
     contest = await Contest.get(contest_id)
     if not contest:
         raise HTTPException(status_code=404, detail="Contest not found")
@@ -408,8 +419,14 @@ async def get_team_in_contest(contest_id: str, team_id: str, current_user: User 
         team = await Team.get(PydanticObjectId(team_id))
     except Exception:
         raise HTTPException(status_code=404, detail="Team not found")
-    if not team or team.user_id != current_user.id:
+    if not team:
         raise HTTPException(status_code=404, detail="Team not found")
+
+    # Allow team owner anytime; others only when contest is LIVE
+    computed_status = _compute_status(contest)
+    is_owner = current_user is not None and str(team.user_id) == str(current_user.id)
+    if not is_owner and computed_status != ContestStatus.LIVE:
+        raise HTTPException(status_code=403, detail="Team details visible when contest is live")
 
     enr = await TeamContestEnrollment.find_one({
         "team_id": team.id,
@@ -454,6 +471,7 @@ async def get_team_in_contest(contest_id: str, team_id: str, current_user: User 
             price=float(p.price or 0.0),
             base_points=0.0,
             contest_points=contest_pts,
+            slot=p.slot,
         ))
 
     team_points = float(sum(item.contest_points for item in player_items))

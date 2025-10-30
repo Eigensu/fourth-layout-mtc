@@ -10,6 +10,8 @@ class LeaderboardEntrySchema(BaseModel):
     teamName: str
     points: float
     rankChange: Optional[int] = None
+    avatarUrl: Optional[str] = None
+    teamId: Optional[str] = None
 
     class Config:
         json_schema_extra = {

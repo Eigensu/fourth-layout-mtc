@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File,
 from datetime import datetime, timedelta
 
 from app.models.user import User, RefreshToken
-from app.schemas.auth import UserRegister, UserLogin, Token
+from app.schemas.auth import UserRegister, UserLogin, Token, ResetPasswordByMobile, ChangePassword
 from app.schemas.user import UserResponse
 from app.utils.security import (
     get_password_hash,
@@ -11,6 +11,7 @@ from app.utils.security import (
     create_refresh_token,
     decode_token
 )
+from app.utils.dependencies import get_current_active_user
 from config.settings import get_settings
 from pydantic import EmailStr, ValidationError
 from typing import Optional
@@ -222,3 +223,58 @@ async def logout(refresh_token: str):
         await token_doc.save()
 
     return {"message": "Successfully logged out"}
+
+
+@router.post("/reset-password-mobile")
+async def reset_password_by_mobile(payload: ResetPasswordByMobile):
+    """Reset password by verifying the provided mobile number matches a stored user."""
+    # Normalize input by digits to compare fairly
+    input_digits = ''.join(ch for ch in payload.mobile if ch.isdigit())
+
+    matched_user = None
+    # Since mobile may be stored with symbols/spaces, scan users with a mobile set
+    async for u in User.find(User.mobile != None):
+        digits = ''.join(ch for ch in (u.mobile or '') if ch.isdigit())
+        if digits and digits == input_digits:
+            matched_user = u
+            break
+
+    if not matched_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User with provided mobile not found"
+        )
+
+    matched_user.hashed_password = get_password_hash(payload.new_password)
+    matched_user.updated_at = datetime.utcnow()
+    await matched_user.save()
+
+    return {"message": "Password updated successfully"}
+
+
+@router.post("/change-password")
+async def change_password(
+    payload: ChangePassword,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Change password for authenticated user with current password verification"""
+    # Verify current password
+    if not verify_password(payload.current_password, current_user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Current password is incorrect"
+        )
+
+    # Check that new password is different from current
+    if verify_password(payload.new_password, current_user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="New password must be different from current password"
+        )
+
+    # Update password
+    current_user.hashed_password = get_password_hash(payload.new_password)
+    current_user.updated_at = datetime.utcnow()
+    await current_user.save()
+
+    return {"message": "Password changed successfully"}

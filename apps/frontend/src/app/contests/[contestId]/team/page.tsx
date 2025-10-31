@@ -71,6 +71,7 @@ export default function ContestTeamBuilderPage() {
 
     // derived
     SLOT_LIMITS,
+    TOTAL_MAX,
     selectedCountBySlot,
     canNextForActiveSlot,
     isFirstSlot,
@@ -453,12 +454,21 @@ export default function ContestTeamBuilderPage() {
                   <div className="space-y-3 sm:space-y-4">
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-2 mb-1 sm:mb-2">
                       <h4 className="font-semibold text-gray-900 text-sm sm:text-base">
-                        Players Selected: {selectedPlayers.length}/16
+                        Players Selected: {selectedPlayers.length}/
+                        {TOTAL_MAX || 12}
                       </h4>
                     </div>
 
                     <div className="mb-2 rounded-lg border border-amber-200 bg-amber-50 text-amber-700 px-2.5 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm">
-                      Select 4 players in each Slot and press Next to proceed.
+                      {(() => {
+                        const mins = Array.from(
+                          new Set(slots.map((s) => s.min_select))
+                        );
+                        if (mins.length === 1) {
+                          return `Select ${mins[0]} players in each Slot and press Next to proceed.`;
+                        }
+                        return `Meet the minimum required players in each Slot and press Next to proceed.`;
+                      })()}
                     </div>
 
                     {/* Two-column on large screens: list (left) and selected panel (right) */}
@@ -508,7 +518,7 @@ export default function ContestTeamBuilderPage() {
                             }
                             selectedPlayers={selectedPlayers}
                             onPlayerSelect={handlePlayerSelect}
-                            maxSelections={16}
+                            maxSelections={TOTAL_MAX || 0}
                             onBlockedSelect={(reason) =>
                               showAlert(reason, "Selection limit")
                             }
@@ -598,12 +608,14 @@ export default function ContestTeamBuilderPage() {
                         <Card className="p-4 lg:sticky lg:top-24">
                           <div className="flex items-center justify-between mb-2">
                             <h5 className="font-semibold text-gray-900 text-sm sm:text-base">
-                              Selected Players ({selectedPlayers.length}/16)
+                              Selected Players ({selectedPlayers.length}/
+                              {TOTAL_MAX || 0})
                             </h5>
                             <Badge
                               size="sm"
                               variant={
-                                selectedPlayers.length >= 16
+                                TOTAL_MAX > 0 &&
+                                selectedPlayers.length >= TOTAL_MAX
                                   ? "success"
                                   : "secondary"
                               }

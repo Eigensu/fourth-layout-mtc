@@ -36,6 +36,11 @@ export function useTeamBuilder(
     return map;
   }, [slots]);
 
+  // Total allowed players across all slots (derived from backend)
+  const TOTAL_MAX = useMemo(() => {
+    return slots.reduce((sum, s) => sum + (s.max_select ?? 0), 0);
+  }, [slots]);
+
   // Fetch slots and players by slot (on mount and when contestId changes)
   useEffect(() => {
     let cancelled = false;
@@ -169,6 +174,10 @@ export function useTeamBuilder(
         if (prev.includes(playerId)) {
           return prev.filter((id) => id !== playerId);
         }
+        // Enforce total selection limit across all slots
+        if (TOTAL_MAX > 0 && prev.length >= TOTAL_MAX) {
+          return prev;
+        }
         const player = players.find((p) => p.id === playerId);
         if (!player) return prev;
         const currentSlotCount = prev.filter((id) => {
@@ -182,7 +191,7 @@ export function useTeamBuilder(
         return [...prev, playerId];
       });
     },
-    [players, SLOT_LIMITS]
+    [players, SLOT_LIMITS, TOTAL_MAX]
   );
 
   const handleSetCaptain = useCallback((playerId: string) => {
@@ -215,6 +224,7 @@ export function useTeamBuilder(
     selectedCountBySlot,
     canNextForActiveSlot,
     isFirstSlot,
+    TOTAL_MAX,
 
     // setters/handlers
     setSelectedPlayers,

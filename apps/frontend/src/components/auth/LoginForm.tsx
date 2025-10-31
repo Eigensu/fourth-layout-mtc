@@ -9,12 +9,23 @@ import Image from "next/image";
 import { useAuth } from "@/contexts/AuthContext";
 import { Input } from "./Input";
 import { Button } from "@/components/ui/Button";
-import { Zap } from "lucide-react";
 import { ForgotPasswordModal } from "./ForgotPasswordModal";
 
-// Validation schema
+// Validation schema: allow username (>=3 chars) OR mobile number (10-20 digits)
 const loginSchema = z.object({
-  username: z.string().min(3, "Username must be at least 3 characters"),
+  username: z
+    .string()
+    .min(1, "Enter username or mobile number")
+    .refine(
+      (v) => {
+        const isMobile = /^[0-9]{10,20}$/.test(v.trim());
+        const isUsername = v.trim().length >= 3;
+        return isMobile || isUsername;
+      },
+      {
+        message: "Enter a valid username (>= 3 chars) or mobile number",
+      }
+    ),
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
@@ -83,11 +94,12 @@ export function LoginForm() {
           <Input
             {...register("username")}
             type="text"
-            placeholder="Enter your username"
+            placeholder="Enter username or mobile number"
             icon="user"
             error={errors.username?.message}
             disabled={isLoading}
             variant="light"
+            autoComplete="username"
           />
 
           <Input
@@ -143,7 +155,10 @@ export function LoginForm() {
           </div>
         </form>
       </div>
-      <ForgotPasswordModal open={forgotOpen} onClose={() => setForgotOpen(false)} />
+      <ForgotPasswordModal
+        open={forgotOpen}
+        onClose={() => setForgotOpen(false)}
+      />
       {/* Footer Note */}
       <p className="text-center text-xs text-gray-500 mt-4">
         By continuing, you agree to our Terms of Service and Privacy Policy

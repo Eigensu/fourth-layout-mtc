@@ -12,20 +12,22 @@ import { getErrorMessage } from "@/lib/api/client";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Loader2, AlertCircle, Users } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { EditPointsModal } from "../players/EditPointsModal";
 import { formatPoints } from "@/lib/utils";
+import { showToast } from "@/components/ui/Toast";
 
 export function TeamsEditSection() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
+  // inline editing: no modal
   const [teamFilter, setTeamFilter] = useState<string>("");
   // Map of contest-scoped points for selected contest: player_id -> points
   const [contestPointsMap, setContestPointsMap] = useState<
     Record<string, number>
   >({});
   const [contestPointsLoading, setContestPointsLoading] = useState(false);
+  // Local edit text for smoother typing without fighting formatting
+  const [editTextMap, setEditTextMap] = useState<Record<string, string>>({});
 
   // Contest selection state
   const [contests, setContests] = useState<Contest[]>([]);
@@ -99,6 +101,12 @@ export function TeamsEditSection() {
           map[r.player_id] = r.points ?? 0;
         });
         setContestPointsMap(map);
+        // initialize edit text map to formatted strings
+        const text: Record<string, string> = {};
+        Object.entries(map).forEach(([pid, val]) => {
+          text[pid] = formatPoints(val);
+        });
+        setEditTextMap(text);
       } catch {
         setContestPointsMap({});
       } finally {
@@ -142,6 +150,45 @@ export function TeamsEditSection() {
       name.toLowerCase().includes(teamFilter.toLowerCase())
     );
   }, [teams, teamFilter]);
+
+  const saveTeamPoints = async (teamName: string, teamPlayers: Player[]) => {
+    if (!selectedContestId) return;
+    try {
+      setContestPointsLoading(true);
+      const updates = teamPlayers.map((p) => {
+        const rawText =
+          editTextMap[p.id] ?? formatPoints(contestPointsMap[p.id] ?? 0);
+        const rawNum = Number(rawText);
+        const normalized = Number(
+          formatPoints(Number.isNaN(rawNum) ? 0 : rawNum)
+        );
+        return { player_id: p.id, points: normalized };
+      });
+      await adminContestsApi.upsertPlayerPoints(selectedContestId, { updates });
+      // Refresh all contest points to reflect server state
+      const res: PlayerPointsResponseItem[] =
+        await adminContestsApi.getPlayerPoints(selectedContestId);
+      const map: Record<string, number> = {};
+      res.forEach((r) => {
+        map[r.player_id] = r.points ?? 0;
+      });
+      setContestPointsMap(map);
+      const text: Record<string, string> = {};
+      Object.entries(map).forEach(([pid, val]) => {
+        text[pid] = formatPoints(val);
+      });
+      setEditTextMap(text);
+      showToast({
+        title: "Saved",
+        message: `${teamName} updated successfully`,
+        variant: "success",
+      });
+    } catch (e) {
+      // non-blocking, show inline error banner at top via setError if desired
+    } finally {
+      setContestPointsLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -219,9 +266,19 @@ export function TeamsEditSection() {
                     <h3 className="text-base font-semibold text-gray-900">
                       {teamName}
                     </h3>
-                    <span className="text-sm text-gray-500">
-                      {teamPlayers.length} players
-                    </span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm text-gray-500">
+                        {teamPlayers.length} players
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="primary"
+                        onClick={() => saveTeamPoints(teamName, teamPlayers)}
+                        disabled={!selectedContest || contestPointsLoading}
+                      >
+                        {contestPointsLoading ? "Saving..." : "Save Team"}
+                      </Button>
+                    </div>
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full">
@@ -231,10 +288,7 @@ export function TeamsEditSection() {
                             Player
                           </th>
                           <th className="px-3 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Points
-                          </th>
-                          <th className="px-3 sm:px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Actions
+                            Points (3 decimals)
                           </th>
                         </tr>
                       </thead>
@@ -245,21 +299,37 @@ export function TeamsEditSection() {
                               {p.name}
                             </td>
                             <td className="px-3 sm:px-4 py-3 text-sm font-semibold text-gray-900">
-                              {formatPoints(contestPointsMap[p.id] ?? 0)}
-                            </td>
-                            <td className="px-3 sm:px-4 py-3 text-right">
-                              <Button
-                                size="sm"
-                                variant="primary"
-                                className="px-2 py-1 text-xs sm:text-sm"
-                                onClick={() => setEditingPlayer(p)}
-                                disabled={!selectedContest}
-                              >
-                                <span className="hidden sm:inline">
-                                  Edit Points
-                                </span>
-                                <span className="sm:hidden">Edit</span>
-                              </Button>
+                              <input
+                                type="text"
+                                inputMode="decimal"
+                                placeholder="0.000"
+                                value={
+                                  editTextMap[p.id] ??
+                                  formatPoints(contestPointsMap[p.id] ?? 0)
+                                }
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setEditTextMap((prev) => ({
+                                    ...prev,
+                                    [p.id]: val,
+                                  }));
+                                }}
+                                onBlur={(e) => {
+                                  const raw = Number(e.target.value);
+                                  const num = Number(
+                                    formatPoints(Number.isNaN(raw) ? 0 : raw)
+                                  );
+                                  setContestPointsMap((prev) => ({
+                                    ...prev,
+                                    [p.id]: num,
+                                  }));
+                                  setEditTextMap((prev) => ({
+                                    ...prev,
+                                    [p.id]: formatPoints(num),
+                                  }));
+                                }}
+                                className="w-28 sm:w-32 px-2 py-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                              />
                             </td>
                           </tr>
                         ))}
@@ -278,30 +348,7 @@ export function TeamsEditSection() {
         </CardBody>
       </Card>
 
-      {editingPlayer && (
-        <EditPointsModal
-          player={editingPlayer}
-          contestId={selectedContestId}
-          initialPoints={contestPointsMap[editingPlayer.id] ?? 0}
-          onClose={() => setEditingPlayer(null)}
-          onSaved={async () => {
-            // Refresh the contest points after save
-            if (!selectedContestId) return;
-            try {
-              const res: PlayerPointsResponseItem[] =
-                await adminContestsApi.getPlayerPoints(selectedContestId);
-              const map: Record<string, number> = {};
-              res.forEach((r) => {
-                map[r.player_id] = r.points ?? 0;
-              });
-              setContestPointsMap(map);
-            } finally {
-              // also refresh global list in case UI needs it
-              fetchAll();
-            }
-          }}
-        />
-      )}
+      {/* No modal: inline editing with per-team save */}
     </div>
   );
 }

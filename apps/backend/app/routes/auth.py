@@ -105,10 +105,22 @@ async def register(
 
 @router.post("/login", response_model=Token)
 async def login(user_data: UserLogin):
-    """Login with username and password"""
+    """Login with username (or mobile) and password"""
 
-    # Find user by username
-    user = await User.find_one(User.username == user_data.username.lower())
+    identifier = (user_data.username or "").strip()
+
+    # First try username lookup (lowercased)
+    user = await User.find_one(User.username == identifier.lower())
+
+    # If not found and identifier looks like a mobile, try matching by mobile digits
+    if not user:
+        input_digits = "".join(ch for ch in identifier if ch.isdigit())
+        if input_digits:
+            async for u in User.find(User.mobile != None):
+                digits = "".join(ch for ch in (u.mobile or "") if ch.isdigit())
+                if digits and digits == input_digits:
+                    user = u
+                    break
 
     if not user or not verify_password(user_data.password, user.hashed_password):
         raise HTTPException(

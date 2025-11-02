@@ -1,6 +1,6 @@
 import apiClient from "../client";
 
-export type ContestStatus = "upcoming" | "live" | "completed" | "archived";
+export type ContestStatus = "live" | "ongoing" | "completed" | "archived";
 export type ContestVisibility = "public" | "private";
 export type PointsScope = "time_window" | "snapshot";
 export type ContestType = "daily" | "full";

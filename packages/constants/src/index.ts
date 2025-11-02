@@ -1,32 +1,32 @@
 // App Constants
-export const APP_NAME = 'Fantasy11';
-export const APP_DESCRIPTION = 'The ultimate fantasy cricket platform';
+export const APP_NAME = "Fantasy11";
+export const APP_DESCRIPTION = "The ultimate fantasy cricket platform";
 
 // API Routes
 export const API_ROUTES = {
-  HEALTH: '/api/health',
-  PLAYERS: '/api/players',
-  MATCHES: '/api/matches',
-  TEAMS: '/api/teams',
-  LEADERBOARD: '/api/leaderboard',
+  HEALTH: "/api/health",
+  PLAYERS: "/api/players",
+  MATCHES: "/api/matches",
+  TEAMS: "/api/teams",
+  LEADERBOARD: "/api/leaderboard",
   AUTH: {
-    LOGIN: '/api/auth/login',
-    REGISTER: '/api/auth/register',
-    REFRESH: '/api/auth/refresh',
+    LOGIN: "/api/auth/login",
+    REGISTER: "/api/auth/register",
+    REFRESH: "/api/auth/refresh",
   },
   CONTESTS: {
-    LIST: '/api/contests',
-    JOIN: '/api/contests/join',
-    RESULTS: '/api/contests/results',
+    LIST: "/api/contests",
+    JOIN: "/api/contests/join",
+    RESULTS: "/api/contests/results",
   },
 } as const;
 
 // Player Roles
 export const PLAYER_ROLES = {
-  BATSMAN: 'Batsman',
-  BOWLER: 'Bowler',
-  ALL_ROUNDER: 'All-rounder',
-  WICKET_KEEPER: 'Wicket-keeper',
+  BATSMAN: "Batsman",
+  BOWLER: "Bowler",
+  ALL_ROUNDER: "All-rounder",
+  WICKET_KEEPER: "Wicket-keeper",
 } as const;
 
 // Team Formation Rules
@@ -49,18 +49,18 @@ export const TEAM_FORMATION = {
 
 // Match Status
 export const MATCH_STATUS = {
-  UPCOMING: 'upcoming',
-  LIVE: 'live',
-  COMPLETED: 'completed',
-  CANCELLED: 'cancelled',
+  LIVE: "live",
+  ONGOING: "ongoing",
+  COMPLETED: "completed",
+  CANCELLED: "cancelled",
 } as const;
 
 // Contest Types
 export const CONTEST_TYPES = {
-  HEAD_TO_HEAD: 'head_to_head',
-  MEGA: 'mega',
-  PRACTICE: 'practice',
-  PRIVATE: 'private',
+  HEAD_TO_HEAD: "head_to_head",
+  MEGA: "mega",
+  PRACTICE: "practice",
+  PRIVATE: "private",
 } as const;
 
 // Points System
@@ -100,24 +100,24 @@ export const POINTS_SYSTEM = {
 // UI Constants
 export const UI_CONSTANTS = {
   COLORS: {
-    PRIMARY: '#3B82F6',
-    SECONDARY: '#10B981',
-    SUCCESS: '#22C55E',
-    WARNING: '#F59E0B',
-    ERROR: '#EF4444',
-    INFO: '#06B6D4',
+    PRIMARY: "#3B82F6",
+    SECONDARY: "#10B981",
+    SUCCESS: "#22C55E",
+    WARNING: "#F59E0B",
+    ERROR: "#EF4444",
+    INFO: "#06B6D4",
   },
   BREAKPOINTS: {
     SM: 640,
     MD: 768,
     LG: 1024,
     XL: 1280,
-    '2XL': 1536,
+    "2XL": 1536,
   },
 } as const;
 
 // Export types
-export type PlayerRole = typeof PLAYER_ROLES[keyof typeof PLAYER_ROLES];
-export type MatchStatus = typeof MATCH_STATUS[keyof typeof MATCH_STATUS];
-export type ContestType = typeof CONTEST_TYPES[keyof typeof CONTEST_TYPES];
-export type ApiRoute = typeof API_ROUTES[keyof typeof API_ROUTES];
+export type PlayerRole = (typeof PLAYER_ROLES)[keyof typeof PLAYER_ROLES];
+export type MatchStatus = (typeof MATCH_STATUS)[keyof typeof MATCH_STATUS];
+export type ContestType = (typeof CONTEST_TYPES)[keyof typeof CONTEST_TYPES];
+export type ApiRoute = (typeof API_ROUTES)[keyof typeof API_ROUTES];

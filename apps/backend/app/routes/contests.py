@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query, Header
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Annotated
 from beanie import PydanticObjectId
 from beanie.operators import Or, RegEx
 from datetime import datetime
@@ -51,8 +51,8 @@ def _compute_status(contest: Contest) -> ContestStatus:
     if end <= now:
         return ContestStatus.COMPLETED
     if start <= now < end:
-        return ContestStatus.LIVE
-    return ContestStatus.UPCOMING
+        return ContestStatus.ONGOING
+    return ContestStatus.LIVE
 
 
 async def to_contest_response(contest: Contest) -> ContestResponse:
@@ -103,24 +103,23 @@ async def get_optional_current_user(authorization: Optional[str] = Header(None))
 
 @router.get("", response_model=ContestListResponse)
 async def list_public_contests(
-    page: int = Query(1, ge=1),
-    page_size: int = Query(10, ge=1, le=100),
-    status: Optional[str] = Query(None),
-    q: Optional[str] = Query(None),
+    page: Annotated[int, Query(ge=1)] = 1,
+    page_size: Annotated[int, Query(ge=1, le=100)] = 10,
+    status: Annotated[ContestStatus | None, Query()] = None,
+    q: Annotated[str | None, Query()] = None,
 ):
     conditions = [Contest.visibility == ContestVisibility.PUBLIC]
 
-    # If a status filter is provided, translate it into time-window constraints
+    # Map status to filter clauses
     now = now_ist()
-    if status == ContestStatus.LIVE:
-        conditions.append(Contest.start_at <= now)
-        conditions.append(Contest.end_at > now)
-    elif status == ContestStatus.UPCOMING:
-        conditions.append(Contest.start_at > now)
-    elif status == ContestStatus.COMPLETED:
-        conditions.append(Contest.end_at <= now)
-    elif status == ContestStatus.ARCHIVED:
-        conditions.append(Contest.status == ContestStatus.ARCHIVED)
+    status_filters = {
+        ContestStatus.ONGOING: [Contest.start_at <= now, Contest.end_at > now],
+        ContestStatus.LIVE: [Contest.start_at > now],
+        ContestStatus.COMPLETED: [Contest.end_at <= now],
+        ContestStatus.ARCHIVED: [Contest.status == ContestStatus.ARCHIVED],
+    }
+    if status:
+        conditions.extend(status_filters[status])
 
     query = Contest.find(conditions[0]) if conditions else Contest.find_all()
     for cond in conditions[1:]:
@@ -351,11 +350,11 @@ async def enroll_in_contest(
     if not team:
         raise HTTPException(status_code=404, detail="Team not found")
 
-    # Only allow non-owners to view when contest is LIVE
+    # Only allow non-owners to view when contest is ONGOING
     computed_status = _compute_status(contest)
     is_owner = current_user is not None and str(team.user_id) == str(current_user.id)
-    if not is_owner and computed_status != ContestStatus.LIVE:
-        raise HTTPException(status_code=403, detail="Team details visible when contest is live")
+    if not is_owner and computed_status != ContestStatus.ONGOING:
+        raise HTTPException(status_code=403, detail="Team details visible when contest is ongoing")
 
     # If daily contest with restrictions: validate team players belong to allowed teams
     if contest.contest_type == "daily" and contest.allowed_teams:
@@ -426,11 +425,11 @@ async def get_team_in_contest(contest_id: str, team_id: str, current_user: Optio
     if not team:
         raise HTTPException(status_code=404, detail="Team not found")
 
-    # Allow team owner anytime; others only when contest is LIVE
+    # Allow team owner anytime; others only when contest is ONGOING or COMPLETED
     computed_status = _compute_status(contest)
     is_owner = current_user is not None and str(team.user_id) == str(current_user.id)
-    if not is_owner and computed_status != ContestStatus.LIVE:
-        raise HTTPException(status_code=403, detail="Team details visible when contest is live")
+    if not is_owner and computed_status not in (ContestStatus.ONGOING, ContestStatus.COMPLETED):
+        raise HTTPException(status_code=403, detail="Team details visible when contest is ongoing or completed")
 
     enr = await TeamContestEnrollment.find_one({
         "team_id": team.id,

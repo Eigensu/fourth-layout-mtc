@@ -283,7 +283,7 @@ async def update_team(
         now = _dt.utcnow()
         active_contest_count = await Contest.find({
             "_id": {"$in": contest_ids},
-            "status": "live",
+            "status": "ongoing",
             "start_at": {"$lte": now},
             "end_at": {"$gt": now},
         }).count()
@@ -470,7 +470,7 @@ async def rename_team(
         now = _dt.utcnow()
         active_contest_count = await Contest.find({
             "_id": {"$in": contest_ids},
-            "status": "live",
+            "status": "ongoing",
             "start_at": {"$lte": now},
             "end_at": {"$gt": now},
         }).count()

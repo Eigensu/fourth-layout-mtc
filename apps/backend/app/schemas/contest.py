@@ -10,7 +10,7 @@ class ContestCreate(BaseModel):
     description: Optional[str] = None
     start_at: datetime
     end_at: datetime
-    status: Literal["upcoming", "live", "completed", "archived"] = "upcoming"
+    status: Literal["live", "ongoing", "completed", "archived"] = "live"
     visibility: Literal["public", "private"] = "public"
     points_scope: Literal["time_window", "snapshot"] = "time_window"
     contest_type: Literal["daily", "full"] = "full"
@@ -44,7 +44,7 @@ class ContestUpdate(BaseModel):
     description: Optional[str] = None
     start_at: Optional[datetime] = None
     end_at: Optional[datetime] = None
-    status: Optional[Literal["upcoming", "live", "completed", "archived"]] = None
+    status: Optional[Literal["live", "ongoing", "completed", "archived"]] = None
     visibility: Optional[Literal["public", "private"]] = None
     points_scope: Optional[Literal["time_window", "snapshot"]] = None
     contest_type: Optional[Literal["daily", "full"]] = None

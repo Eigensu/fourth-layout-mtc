@@ -114,7 +114,7 @@ export default function ContestLeaderboardTabPage() {
                         entry={entry}
                         isCurrentUser={currentUserEntry?.username === entry.username}
                         action={
-                          contest?.status === "live" && entry.teamId ? (
+                          entry.teamId && (contest?.status === "ongoing" || contest?.status === "completed") ? (
                             <button
                               type="button"
                               onClick={() => { setSelectedTeamId(entry.teamId!); setTeamDialogOpen(true); }}

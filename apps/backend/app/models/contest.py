@@ -22,7 +22,7 @@ class Contest(Document):
     end_at: datetime
 
     # lifecycle and visibility
-    status: ContestStatus = ContestStatus.UPCOMING
+    status: ContestStatus = ContestStatus.LIVE
     visibility: ContestVisibility = ContestVisibility.PUBLIC
 
     # points calculation mode (phase 1 uses baseline; ledger can come later)

@@ -15,7 +15,7 @@ class Contest(Document):
     participants: List[PydanticObjectId] = Field(default_factory=list)  # User IDs
     start_date: datetime
     end_date: Optional[datetime] = None
-    status: str = "Upcoming"  # Upcoming, Active, Completed, Cancelled
+    status: str = "Live"  # Live, Ongoing, Completed, Cancelled
     description: Optional[str] = None
     rules: Optional[dict] = None
     prize_distribution: Optional[dict] = None  # 1st place: 50%, 2nd: 30%, etc.

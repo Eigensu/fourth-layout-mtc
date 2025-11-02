@@ -4,7 +4,14 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { adminContestsApi, Contest, ContestCreate, ContestType } from "@/lib/api/admin/contests";
+import {
+  adminContestsApi,
+  Contest,
+  ContestCreate,
+  ContestType,
+  ContestVisibility,
+  ContestStatus,
+} from "@/lib/api/admin/contests";
 import { API_BASE_URL } from "@/common/consts";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { AlertDialog } from "@/components/ui/AlertDialog";
@@ -22,14 +29,17 @@ export default function AdminContestsPage() {
     end_at: new Date(Date.now() + 24 * 3600 * 1000).toISOString(),
     visibility: "public",
     points_scope: "time_window",
-    status: "upcoming",
+    status: "live",
     contest_type: "full",
     allowed_teams: [],
   });
   const [creating, setCreating] = useState(false);
   const [availableTeams, setAvailableTeams] = useState<string[]>([]);
-  const [selectedAllowedTeams, setSelectedAllowedTeams] = useState<string[]>([]);
-  const [allowedDropdownOpen, setAllowedDropdownOpen] = useState<boolean>(false);
+  const [selectedAllowedTeams, setSelectedAllowedTeams] = useState<string[]>(
+    []
+  );
+  const [allowedDropdownOpen, setAllowedDropdownOpen] =
+    useState<boolean>(false);
 
   // IST inputs for start/end (date + free time HH:MM 24h)
   const [startDate, setStartDate] = useState(""); // yyyy-MM-dd
@@ -78,9 +88,7 @@ export default function AdminContestsPage() {
         const data: Array<{ team?: string | null }> = await res.json();
         const uniq = Array.from(
           new Set(
-            data
-              .map((p) => (p.team || "").trim())
-              .filter((t) => t.length > 0)
+            data.map((p) => (p.team || "").trim()).filter((t) => t.length > 0)
           )
         ).sort();
         setAvailableTeams(uniq);
@@ -108,8 +116,10 @@ export default function AdminContestsPage() {
       };
       const s = toParts(istNow);
       const e = toParts(istEnd);
-      setStartDate(s.date); setStartTime(s.time);
-      setEndDate(e.date); setEndTime(e.time);
+      setStartDate(s.date);
+      setStartTime(s.time);
+      setEndDate(e.date);
+      setEndTime(e.time);
     };
     seedISTDefaults();
   }, []);
@@ -145,7 +155,8 @@ export default function AdminContestsPage() {
         start_at: startIso,
         end_at: endIso,
         // Only send allowed_teams for daily contests; clear otherwise
-        allowed_teams: form.contest_type === "daily" ? selectedAllowedTeams : [],
+        allowed_teams:
+          form.contest_type === "daily" ? selectedAllowedTeams : [],
       };
       await adminContestsApi.create(payload);
       setForm({ ...form, code: "", name: "" });
@@ -204,7 +215,12 @@ export default function AdminContestsPage() {
   return (
     <ProtectedRoute>
       <div className="max-w-5xl mx-auto p-4 space-y-4">
-        <AlertDialog open={alertOpen} title={alertTitle} message={alertMessage} onClose={() => setAlertOpen(false)} />
+        <AlertDialog
+          open={alertOpen}
+          title={alertTitle}
+          message={alertMessage}
+          onClose={() => setAlertOpen(false)}
+        />
         <ConfirmDialog
           open={showDeleteDialog}
           title="Delete this contest?"
@@ -213,7 +229,12 @@ export default function AdminContestsPage() {
           confirmText={deleting ? "Deleting..." : "Delete"}
           destructive
           loading={deleting}
-          onCancel={() => { if (!deleting) { setShowDeleteDialog(false); setDeleteTargetId(null); } }}
+          onCancel={() => {
+            if (!deleting) {
+              setShowDeleteDialog(false);
+              setDeleteTargetId(null);
+            }
+          }}
           onConfirm={confirmDelete}
         />
         <ConfirmDialog
@@ -224,143 +245,235 @@ export default function AdminContestsPage() {
           confirmText={deleting ? "Deleting..." : "Force Delete"}
           destructive
           loading={deleting}
-          onCancel={() => { if (!deleting) { setShowForceDeleteDialog(false); } }}
+          onCancel={() => {
+            if (!deleting) {
+              setShowForceDeleteDialog(false);
+            }
+          }}
           onConfirm={confirmForceDelete}
         />
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold">Admin · Contests</h1>
-          <Link href="/admin" className="px-3 py-1 rounded border hover:bg-gray-50">Back</Link>
+          <Link
+            href="/admin"
+            className="px-3 py-1 rounded border hover:bg-gray-50"
+          >
+            Back
+          </Link>
         </div>
 
         <Card>
           <CardBody className="p-4">
             <h2 className="text-lg font-medium mb-2">Create Contest</h2>
             <div className="grid gap-2 sm:grid-cols-2">
-            <div>
-              <label className="block text-sm">Code</label>
-              <input className="w-full border p-2 rounded" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} />
-            </div>
-            <div>
-              <label className="block text-sm">Name</label>
-              <input className="w-full border p-2 rounded" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-            </div>
-            <div>
-              <label className="block text-sm">Start (IST)</label>
-              <div className="flex gap-2">
-                <input type="date" className="border p-2 rounded" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-                <input type="time" step={60} className="border p-2 rounded w-28" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+              <div>
+                <label className="block text-sm">Code</label>
+                <input
+                  className="w-full border p-2 rounded"
+                  value={form.code}
+                  onChange={(e) => setForm({ ...form, code: e.target.value })}
+                />
               </div>
-            </div>
-            <div>
-              <label className="block text-sm">End (IST)</label>
-              <div className="flex gap-2">
-                <input type="date" className="border p-2 rounded" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
-                <input type="time" step={60} className="border p-2 rounded w-28" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
+              <div>
+                <label className="block text-sm">Name</label>
+                <input
+                  className="w-full border p-2 rounded"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                />
               </div>
-            </div>
-            <div>
-              <label className="block text-sm">Visibility</label>
-              <select className="w-full border p-2 rounded" value={form.visibility} onChange={(e) => setForm({ ...form, visibility: e.target.value as any })}>
-                <option value="public">public</option>
-                <option value="private">private</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm">Status</label>
-              <select className="w-full border p-2 rounded" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as any })}>
-                <option value="upcoming">upcoming</option>
-                <option value="live">live</option>
-                <option value="completed">completed</option>
-                <option value="archived">archived</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm">Contest Type</label>
-              <select
-                className="w-full border p-2 rounded"
-                value={form.contest_type as ContestType}
-                onChange={(e) => setForm({ ...form, contest_type: e.target.value as ContestType })}
-              >
-                <option value="full">full</option>
-                <option value="daily">daily</option>
-              </select>
-            </div>
-            {form.contest_type === "daily" && (
-              <div className="sm:col-span-2 space-y-2">
-                <label className="block text-sm">Allowed Teams</label>
-                {/* Dropdown trigger */}
-                <div className="relative">
-                  <button
-                    type="button"
-                    className="w-full flex items-center justify-between border rounded px-3 py-2 bg-white hover:bg-gray-50"
-                    onClick={() => setAllowedDropdownOpen((o) => !o)}
-                  >
-                    <span className="text-left truncate">
-                      {selectedAllowedTeams.length > 0
-                        ? `${selectedAllowedTeams.length} selected`
-                        : "Select allowed teams"}
-                    </span>
-                    <svg className={`w-4 h-4 ml-2 transition-transform ${allowedDropdownOpen ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor"><path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 011.08 1.04l-4.25 4.25a.75.75 0 01-1.06 0L5.21 8.27a.75.75 0 01.02-1.06z"/></svg>
-                  </button>
-                  {allowedDropdownOpen && (
-                    <div className="absolute z-20 mt-1 w-full max-h-64 overflow-auto rounded border bg-white shadow">
-                      <div className="p-2 sticky top-0 bg-white border-b flex gap-2">
-                        <input
-                          type="text"
-                          placeholder="Search..."
-                          className="flex-1 border rounded px-2 py-1 text-sm"
-                          onChange={(e) => {
-                            const q = e.target.value.toLowerCase();
-                            const filtered = availableTeams.filter((t) => t.toLowerCase().includes(q));
-                            // We won't alter availableTeams permanently; instead render based on q below
-                            // To keep code simple, stash the query in a data-attr – or filter inline below
-                            (e.target as any).dataset.query = q;
-                          }}
-                        />
-                        <button
-                          type="button"
-                          className="px-2 py-1 text-xs rounded border"
-                          onClick={() => setSelectedAllowedTeams(availableTeams)}
-                        >
-                          Select All
-                        </button>
-                        <button
-                          type="button"
-                          className="px-2 py-1 text-xs rounded border"
-                          onClick={() => setSelectedAllowedTeams([])}
-                        >
-                          Clear
-                        </button>
-                      </div>
-                      <ul className="divide-y">
-                        {availableTeams.map((t) => (
-                          <li key={t} className="px-3 py-2 hover:bg-gray-50 cursor-pointer" onClick={() => {
-                            setSelectedAllowedTeams((prev) =>
-                              prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]
-                            );
-                          }}>
-                            <div className="flex items-center gap-2">
-                              <span className={`inline-flex w-4 h-4 items-center justify-center rounded border ${selectedAllowedTeams.includes(t) ? 'bg-blue-600 border-blue-600' : 'bg-white'}`}>
-                                {selectedAllowedTeams.includes(t) && (
-                                  <svg viewBox="0 0 20 20" fill="none" className="w-3 h-3">
-                                    <path d="M5 10.5l3 3 7-7" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                  </svg>
-                                )}
-                              </span>
-                              <span className="text-sm text-gray-800">{t}</span>
-                            </div>
-                          </li>
-                        ))}
-                        {availableTeams.length === 0 && (
-                          <li className="px-3 py-2 text-sm text-gray-500">No teams available</li>
-                        )}
-                      </ul>
-                    </div>
-                  )}
+              <div>
+                <label className="block text-sm">Start (IST)</label>
+                <div className="flex gap-2">
+                  <input
+                    type="date"
+                    className="border p-2 rounded"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                  />
+                  <input
+                    type="time"
+                    step={60}
+                    className="border p-2 rounded w-28"
+                    value={startTime}
+                    onChange={(e) => setStartTime(e.target.value)}
+                  />
                 </div>
-                <p className="text-xs text-gray-500">Only players whose team is in the allowed list will be selectable for this daily contest.</p>
               </div>
-            )}
+              <div>
+                <label className="block text-sm">End (IST)</label>
+                <div className="flex gap-2">
+                  <input
+                    type="date"
+                    className="border p-2 rounded"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                  />
+                  <input
+                    type="time"
+                    step={60}
+                    className="border p-2 rounded w-28"
+                    value={endTime}
+                    onChange={(e) => setEndTime(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm">Visibility</label>
+                <select
+                  className="w-full border p-2 rounded"
+                  value={form.visibility}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      visibility: e.currentTarget.value as ContestVisibility,
+                    })
+                  }
+                >
+                  <option value="public">public</option>
+                  <option value="private">private</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm">Status</label>
+                <select
+                  className="w-full border p-2 rounded"
+                  value={form.status}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      status: e.currentTarget.value as ContestStatus,
+                    })
+                  }
+                >
+                  <option value="live">live</option>
+                  <option value="ongoing">ongoing</option>
+                  <option value="completed">completed</option>
+                  <option value="archived">archived</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm">Contest Type</label>
+                <select
+                  className="w-full border p-2 rounded"
+                  value={form.contest_type as ContestType}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      contest_type: e.target.value as ContestType,
+                    })
+                  }
+                >
+                  <option value="full">full</option>
+                  <option value="daily">daily</option>
+                </select>
+              </div>
+              {form.contest_type === "daily" && (
+                <div className="sm:col-span-2 space-y-2">
+                  <label className="block text-sm">Allowed Teams</label>
+                  {/* Dropdown trigger */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      className="w-full flex items-center justify-between border rounded px-3 py-2 bg-white hover:bg-gray-50"
+                      onClick={() => setAllowedDropdownOpen((o) => !o)}
+                    >
+                      <span className="text-left truncate">
+                        {selectedAllowedTeams.length > 0
+                          ? `${selectedAllowedTeams.length} selected`
+                          : "Select allowed teams"}
+                      </span>
+                      <svg
+                        className={`w-4 h-4 ml-2 transition-transform ${allowedDropdownOpen ? "rotate-180" : ""}`}
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 011.08 1.04l-4.25 4.25a.75.75 0 01-1.06 0L5.21 8.27a.75.75 0 01.02-1.06z" />
+                      </svg>
+                    </button>
+                    {allowedDropdownOpen && (
+                      <div className="absolute z-20 mt-1 w-full max-h-64 overflow-auto rounded border bg-white shadow">
+                        <div className="p-2 sticky top-0 bg-white border-b flex gap-2">
+                          <input
+                            type="text"
+                            placeholder="Search..."
+                            className="flex-1 border rounded px-2 py-1 text-sm"
+                            onChange={(e) => {
+                              const q = e.currentTarget.value.toLowerCase();
+                              e.currentTarget.dataset.query = q;
+                            }}
+                          />
+                          <button
+                            type="button"
+                            className="px-2 py-1 text-xs rounded border"
+                            onClick={() =>
+                              setSelectedAllowedTeams(availableTeams)
+                            }
+                          >
+                            Select All
+                          </button>
+                          <button
+                            type="button"
+                            className="px-2 py-1 text-xs rounded border"
+                            onClick={() => setSelectedAllowedTeams([])}
+                          >
+                            Clear
+                          </button>
+                        </div>
+                        <ul className="divide-y">
+                          {availableTeams.map((t) => (
+                            <li
+                              key={t}
+                              className="px-3 py-2 hover:bg-gray-50 cursor-pointer"
+                              onClick={() => {
+                                setSelectedAllowedTeams((prev) =>
+                                  prev.includes(t)
+                                    ? prev.filter((x) => x !== t)
+                                    : [...prev, t]
+                                );
+                              }}
+                            >
+                              <div className="flex items-center gap-2">
+                                <span
+                                  className={`inline-flex w-4 h-4 items-center justify-center rounded border ${selectedAllowedTeams.includes(t) ? "bg-blue-600 border-blue-600" : "bg-white"}`}
+                                >
+                                  {selectedAllowedTeams.includes(t) && (
+                                    <svg
+                                      viewBox="0 0 20 20"
+                                      fill="none"
+                                      className="w-3 h-3"
+                                    >
+                                      <path
+                                        d="M5 10.5l3 3 7-7"
+                                        stroke="white"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                      />
+                                    </svg>
+                                  )}
+                                </span>
+                                <span className="text-sm text-gray-800">
+                                  {t}
+                                </span>
+                              </div>
+                            </li>
+                          ))}
+                          {availableTeams.length === 0 && (
+                            <li className="px-3 py-2 text-sm text-gray-500">
+                              No teams available
+                            </li>
+                          )}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Only players whose team is in the allowed list will be
+                    selectable for this daily contest.
+                  </p>
+                </div>
+              )}
             </div>
             <Button className="mt-3" disabled={creating} onClick={create}>
               {creating ? "Creating..." : "Create"}
@@ -378,22 +491,46 @@ export default function AdminContestsPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="font-medium">{c.name}</div>
-                    <div className="text-sm text-gray-600">{c.code} · {c.status} · {c.visibility}</div>
+                    <div className="text-sm text-gray-600">
+                      {c.code} · {c.status} · {c.visibility}
+                    </div>
                     <div className="text-xs text-gray-700 mt-1">
                       {(() => {
                         const fmt = (iso: string) => {
                           const d = new Date(iso);
-                          const utc = d.getTime() + d.getTimezoneOffset() * 60000;
+                          const utc =
+                            d.getTime() + d.getTimezoneOffset() * 60000;
                           const ist = new Date(utc + (5 * 60 + 30) * 60000);
-                          return ist.toLocaleString(undefined, { year: "numeric", month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: true });
+                          return ist.toLocaleString(undefined, {
+                            year: "numeric",
+                            month: "short",
+                            day: "2-digit",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            hour12: true,
+                          });
                         };
-                        return <span>{fmt(c.start_at)} – {fmt(c.end_at)} IST</span>;
+                        return (
+                          <span>
+                            {fmt(c.start_at)} – {fmt(c.end_at)} IST
+                          </span>
+                        );
                       })()}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Link href={`/admin/contests/${c.id}`} className="px-3 py-1 rounded border">Manage</Link>
-                    <button className="px-3 py-1 rounded border text-red-700" onClick={() => remove(c.id)}>Delete</button>
+                    <Link
+                      href={`/admin/contests/${c.id}`}
+                      className="px-3 py-1 rounded border"
+                    >
+                      Manage
+                    </Link>
+                    <button
+                      className="px-3 py-1 rounded border text-red-700"
+                      onClick={() => remove(c.id)}
+                    >
+                      Delete
+                    </button>
                   </div>
                 </div>
               </CardBody>

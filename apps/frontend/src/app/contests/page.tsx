@@ -4,7 +4,11 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Trophy } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { publicContestsApi, Contest, type EnrollmentResponse } from "@/lib/api/public/contests";
+import {
+  publicContestsApi,
+  Contest,
+  type EnrollmentResponse,
+} from "@/lib/api/public/contests";
 import { formatIST, formatISTRange } from "@/lib/utils";
 import { PillNavbar } from "@/components/navigation/PillNavbar";
 import { MobileUserMenu } from "@/components/navigation/MobileUserMenu";
@@ -24,7 +28,7 @@ export default function ContestsPage() {
     (async () => {
       try {
         setLoading(true);
-        // Fetch all public contests; we'll partition into Active vs Upcoming
+        // Fetch all public contests; we'll partition into Active vs Live
         const res = await publicContestsApi.list({ page_size: 100 });
         setContests(res.contests);
       } catch (e: any) {
@@ -58,9 +62,9 @@ export default function ContestsPage() {
   };
 
   // Partition contests using status values
-  const activeContests = contests.filter((c) => c.status === "live");
-  const upcomingContests = contests
-    .filter((c) => c.status === "upcoming")
+  const activeContests = contests.filter((c) => c.status === "ongoing");
+  const liveContests = contests
+    .filter((c) => c.status === "live")
     .sort(
       (a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime()
     );
@@ -78,7 +82,7 @@ export default function ContestsPage() {
           <Trophy className="w-7 h-7 text-primary-600" />
           <span>Active Contests</span>
         </h1>
-        {loading && <div>Loading...</div>}
+        {loading && <div>Getting your contests...</div>}
         {error && <div className="text-red-600">{error}</div>}
         <div className="grid gap-4 sm:gap-5">
           {activeContests.map((c) => (
@@ -111,10 +115,12 @@ export default function ContestsPage() {
                         </button>
                       ) : (
                         <button
-                          onClick={() => handleJoin(c.id)}
-                          className="w-full sm:w-auto px-4 py-2.5 sm:px-8 sm:py-2 rounded-xl bg-gradient-primary text-white text-sm sm:text-base font-semibold shadow hover:opacity-95"
+                          onClick={() =>
+                            router.push(`/contests/${c.id}/leaderboard`)
+                          }
+                          className="w-full sm:w-auto px-4 py-2.5 sm:px-6 sm:py-2 rounded-xl border text-sm sm:text-base font-semibold text-gray-700 border-gray-200 hover:bg-gray-50 whitespace-nowrap"
                         >
-                          Join
+                          View Leaderboard
                         </button>
                       )}
                     </div>
@@ -123,7 +129,7 @@ export default function ContestsPage() {
                     <div className="flex items-center gap-2">
                       <span className="text-xs px-2 py-0.5 rounded-full bg-red-50 text-red-700 border border-red-200 inline-flex items-center gap-1">
                         <span className="h-1.5 w-1.5 rounded-full bg-red-600 animate-pulse"></span>
-                        LIVE
+                        ONGOING
                       </span>
                       {joinedContestIds.has(c.id) && (
                         <span className="text-xs px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200">
@@ -148,13 +154,13 @@ export default function ContestsPage() {
           )}
         </div>
 
-        {/* Upcoming Contests */}
+        {/* Live Contests */}
         <div className="mt-8 sm:mt-12">
           <h2 className="text-xl sm:text-2xl font-extrabold mb-4 sm:mb-6 text-gray-900">
-            Upcoming Contests
+            Live Contests
           </h2>
           <div className="grid gap-4 sm:gap-5">
-            {upcomingContests.map((c) => (
+            {liveContests.map((c) => (
               <div key={c.id} className="w-full">
                 <div className="rounded-3xl bg-white/90 backdrop-blur shadow-md px-4 sm:px-6 py-5 sm:py-6 min-h-[160px] h-full">
                   <div className="flex items-start justify-between gap-4 sm:gap-6 h-full">
@@ -172,7 +178,8 @@ export default function ContestsPage() {
                         </p>
                       )}
                       <div className="text-[11px] sm:text-xs text-gray-500 mt-1 leading-snug">
-                        Starts: {formatIST(c.start_at)} IST · Ends: {formatIST(c.end_at)} IST
+                        Starts: {formatIST(c.start_at)} IST · Ends:{" "}
+                        {formatIST(c.end_at)} IST
                       </div>
                       <div className="mt-auto pt-3 flex items-center gap-2">
                         {joinedContestIds.has(c.id) ? (
@@ -197,7 +204,7 @@ export default function ContestsPage() {
                     <div className="flex flex-col items-end gap-2 shrink-0">
                       <div className="flex items-center gap-2">
                         <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 border border-gray-200">
-                          UPCOMING
+                          LIVE
                         </span>
                         {joinedContestIds.has(c.id) && (
                           <span className="text-xs px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200">
@@ -217,8 +224,8 @@ export default function ContestsPage() {
                 </div>
               </div>
             ))}
-            {!loading && upcomingContests.length === 0 && (
-              <div className="text-gray-600">No upcoming contests.</div>
+            {!loading && liveContests.length === 0 && (
+              <div className="text-gray-600">No live contests.</div>
             )}
           </div>
         </div>

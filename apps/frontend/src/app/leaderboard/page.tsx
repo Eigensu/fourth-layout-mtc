@@ -65,7 +65,7 @@ export default function LeaderboardIndexPage() {
                   <span className="font-semibold text-gray-900 whitespace-normal break-words">
                     {c.name}
                   </span>
-                  <span className={`text-xs px-2 py-0.5 rounded-full border ${c.status === "live"
+                  <span className={`text-xs px-2 py-0.5 rounded-full border ${c.status === "ongoing"
                     ? "bg-green-50 text-green-700 border-green-200"
                     : c.status === "completed"
                       ? "bg-gray-50 text-gray-700 border-gray-200"

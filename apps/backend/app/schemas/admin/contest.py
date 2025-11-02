@@ -11,7 +11,7 @@ class ContestBase(BaseModel):
     max_participants: int = Field(default=100, ge=1)
     start_date: datetime
     end_date: Optional[datetime] = None
-    status: str = Field(default="Upcoming", description="Upcoming, Active, Completed, Cancelled")
+    status: str = Field(default="Live", description="Live, Ongoing, Completed, Cancelled")
     description: Optional[str] = None
     rules: Optional[dict] = None
     prize_distribution: Optional[dict] = None

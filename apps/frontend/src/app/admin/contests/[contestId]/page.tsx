@@ -179,7 +179,7 @@ export default function AdminManageContestPage() {
   const toggleContestStatus = async () => {
     if (!contest) return;
     const current = contest.status;
-    const next = current === "live" ? "upcoming" : "live";
+    const next = current === "ongoing" ? "live" : "ongoing";
     try {
       setToggling(true);
       const updated = await adminContestsApi.update(contest.id, {
@@ -413,16 +413,16 @@ export default function AdminManageContestPage() {
             </div>
             <div className="mt-2">
               <button
-                className={`px-3 py-1 rounded border text-sm ${contest.status === "live" ? "text-green-700 border-green-300" : "text-red-700 border-red-300"}`}
+                className={`px-3 py-1 rounded border text-sm ${contest.status === "ongoing" ? "text-green-700 border-green-300" : "text-red-700 border-red-300"}`}
                 onClick={toggleContestStatus}
                 disabled={toggling}
                 title="Toggle contest ON/OFF"
               >
                 {toggling
                   ? "Toggling..."
-                  : contest.status === "live"
-                    ? "Set Upcoming (Open)"
-                    : "Set Live (Close)"}
+                  : contest.status === "ongoing"
+                    ? "Set Live (Open)"
+                    : "Set Ongoing (Close)"}
               </button>
             </div>
             <div className="text-sm text-gray-700 mt-1">
@@ -494,8 +494,8 @@ export default function AdminManageContestPage() {
                       }
                     >
                       <option value="">(no change)</option>
-                      <option value="upcoming">upcoming</option>
                       <option value="live">live</option>
+                      <option value="ongoing">ongoing</option>
                       <option value="completed">completed</option>
                       <option value="archived">archived</option>
                     </select>
@@ -691,7 +691,7 @@ export default function AdminManageContestPage() {
                           <button
                             className="px-3 py-1 rounded border text-red-700"
                             onClick={() => unenrollTeam(t.team_id)}
-                            disabled={contest?.status === "live"}
+                            disabled={contest?.status === "ongoing"}
                           >
                             Unenroll
                           </button>
@@ -700,7 +700,7 @@ export default function AdminManageContestPage() {
                             type="checkbox"
                             checked={!!selectedTeamIds[t.team_id]}
                             onChange={() => toggleTeam(t.team_id)}
-                            disabled={contest?.status === "live"}
+                            disabled={contest?.status === "ongoing"}
                           />
                         )}
                       </div>
@@ -714,11 +714,11 @@ export default function AdminManageContestPage() {
                 </div>
                 <button
                   className="mt-3 px-4 py-2 rounded bg-blue-600 text-white"
-                  disabled={enrolling || contest?.status === "live"}
+                  disabled={enrolling || contest?.status === "ongoing"}
                   onClick={enrollSelected}
                 >
-                  {contest?.status === "live"
-                    ? "Enrollment blocked (live)"
+                  {contest?.status === "ongoing"
+                    ? "Enrollment blocked (ongoing)"
                     : enrolling
                       ? "Enrolling..."
                       : "Enroll Selected Teams"}

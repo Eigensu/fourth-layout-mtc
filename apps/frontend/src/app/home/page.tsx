@@ -26,8 +26,8 @@ export default function HomePage() {
   const [joinedContestIds, setJoinedContestIds] = useState<Set<string>>(
     new Set()
   );
-  const [upcomingContests, setUpcomingContests] = useState<Contest[]>([]);
-  const [loadingUpcoming, setLoadingUpcoming] = useState(false);
+  const [liveContests, setLiveContests] = useState<Contest[]>([]);
+  const [loadingLive, setLoadingLive] = useState(false);
 
   useEffect(() => {
     const loadActive = async () => {
@@ -35,7 +35,7 @@ export default function HomePage() {
         setLoadingContests(true);
         setContestsError(null);
         const res = await publicContestsApi.list({
-          status: "live",
+          status: "ongoing",
           page_size: 8,
         });
         setActiveContests(res.contests || []);
@@ -66,21 +66,21 @@ export default function HomePage() {
   };
 
   useEffect(() => {
-    const loadUpcoming = async () => {
+    const loadLive = async () => {
       try {
-        setLoadingUpcoming(true);
+        setLoadingLive(true);
         const res = await publicContestsApi.list({
-          status: "upcoming",
+          status: "live",
           page_size: 8,
         });
-        setUpcomingContests(res.contests || []);
+        setLiveContests(res.contests || []);
       } catch {
-        // ignore upcoming failures separately for now
+        // ignore live failures separately for now
       } finally {
-        setLoadingUpcoming(false);
+        setLoadingLive(false);
       }
     };
-    loadUpcoming();
+    loadLive();
   }, []);
 
   // Detect contests the user is enrolled in
@@ -214,11 +214,11 @@ export default function HomePage() {
             </div>
           </section>
 
-          {/* Active Contests */}
+          {/* Ongoing Contests */}
           <section className="mx-4 mb-10 sm:mb-12">
             <div className="container mx-auto px-4 sm:px-6 max-w-screen-xl">
               <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-4">
-                Active Contests
+                Ongoing Contests
               </h2>
               {contestsError && (
                 <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700 text-sm mb-4">
@@ -268,28 +268,18 @@ export default function HomePage() {
                             {formatEndsIn(c.end_at)}
                           </div>
                           <div className="mt-auto pt-3 flex items-center gap-2">
-                            {!joinedContestIds.has(c.id) ? (
-                              isAuthenticated ? (
-                                <Link
-                                  href={`/contests/${c.id}`}
-                                  className="inline-flex justify-center items-center px-4 py-2 rounded-lg bg-gradient-primary text-white text-sm font-medium shadow hover:opacity-95"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  Join Contest
-                                </Link>
-                              ) : (
-                                <Link
-                                  href={`${ROUTES.LOGIN}?next=${encodeURIComponent(`/contests/${c.id}/team`)}`}
-                                  className="inline-flex justify-center items-center px-4 py-2 rounded-lg bg-gradient-primary text-white text-sm font-medium shadow hover:opacity-95"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  Login to Join Contest
-                                </Link>
-                              )
+                            {joinedContestIds.has(c.id) ? (
+                              <Link
+                                href={`/contests/${c.id}/team`}
+                                className="inline-flex justify-center items-center px-4 py-2 rounded-lg border text-sm font-medium text-primary-700 border-primary-200 hover:bg-primary-50"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                View Team
+                              </Link>
                             ) : (
                               <Link
                                 href={`/contests/${c.id}/leaderboard`}
-                                className="inline-flex justify-center items-center px-4 py-2 rounded-lg border text-sm font-medium text-primary-700 border-primary-200 hover:bg-primary-50"
+                                className="inline-flex justify-center items-center px-4 py-2 rounded-lg border text-sm font-medium text-gray-700 border-gray-200 hover:bg-gray-50"
                                 onClick={(e) => e.stopPropagation()}
                               >
                                 View Leaderboard
@@ -301,7 +291,7 @@ export default function HomePage() {
                           <div className="flex items-center gap-2">
                             <span className="text-xs px-2 py-0.5 rounded-full bg-red-50 text-red-700 border border-red-200 inline-flex items-center gap-1">
                               <span className="h-1.5 w-1.5 rounded-full bg-red-600 animate-pulse"></span>
-                              LIVE
+                              ONGOING
                             </span>
                             {joinedContestIds.has(c.id) && (
                               <span className="text-xs px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200">
@@ -325,13 +315,13 @@ export default function HomePage() {
             </div>
           </section>
 
-          {/* Upcoming Contests */}
+          {/* Live Contests */}
           <section className="mx-4 mb-10 sm:mb-12">
             <div className="container mx-auto px-4 sm:px-6 max-w-screen-xl">
               <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-4">
-                Upcoming Contests
+                Live Contests
               </h2>
-              {loadingUpcoming ? (
+              {loadingLive ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {Array.from({ length: 4 }).map((_, i) => (
                     <div
@@ -340,13 +330,13 @@ export default function HomePage() {
                     />
                   ))}
                 </div>
-              ) : upcomingContests.length === 0 ? (
+              ) : liveContests.length === 0 ? (
                 <div className="bg-white border border-gray-200 rounded-2xl p-6 text-gray-600">
-                  No upcoming contests at the moment.
+                  No live contests at the moment.
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 auto-rows-fr">
-                  {upcomingContests.map((c) => (
+                  {liveContests.map((c) => (
                     <div
                       key={c.id}
                       role="button"
@@ -424,7 +414,7 @@ export default function HomePage() {
                         <div className="flex flex-col items-end gap-2 shrink-0">
                           <div className="flex items-center gap-2">
                             <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 border border-gray-200">
-                              UPCOMING
+                              LIVE
                             </span>
                             {joinedContestIds.has(c.id) && (
                               <span className="text-xs px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200">
@@ -441,7 +431,6 @@ export default function HomePage() {
                           />
                         </div>
                       </div>
-
                     </div>
                   ))}
                 </div>

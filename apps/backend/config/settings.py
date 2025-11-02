@@ -43,6 +43,14 @@ class Settings(BaseSettings):
     payment_gateway_key: Optional[str] = Field(default=None, alias="PAYMENT_GATEWAY_KEY")
     email_service_key: Optional[str] = Field(default=None, alias="EMAIL_SERVICE_KEY")
     
+     # 2Factor / OTP configuration
+    twofactor_api_key: Optional[str] = Field(default=None, alias="TWOFACTOR_API_KEY")
+    twofactor_template_name: Optional[str] = Field(default=None, alias="TWOFACTOR_TEMPLATE_NAME")
+    twofactor_base_url: str = Field(default="https://2factor.in/API/V1", alias="TWOFACTOR_BASE_URL")
+    otp_expiry_seconds: int = Field(default=600, alias="OTP_EXPIRY_SECONDS")
+    otp_max_attempts: int = Field(default=5, alias="OTP_MAX_ATTEMPTS")
+    reset_token_ttl_seconds: int = Field(default=600, alias="RESET_TOKEN_TTL_SECONDS")
+    
     @property
     def cors_origins_list(self) -> list[str]:
         """Convert CORS origins string to list."""

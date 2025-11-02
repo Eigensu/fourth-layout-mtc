@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 import uvicorn
 from datetime import datetime
 from config.settings import settings
+import logging
 from config.database import connect_to_mongo, close_mongo_connection
 from app.routes import auth_router, users_router, sponsors_router, leaderboard_router, contests_router
 from app.routes.players import router as players_router
@@ -20,6 +21,11 @@ from app.routes.admin import (
     users_teams_router as admin_users_teams_router,
 )
 
+# Logging configuration
+logging.basicConfig(
+    level=logging.CRITICAL,
+    format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -100,5 +106,7 @@ if __name__ == "__main__":
         "main:app",
         host=settings.api_host,
         port=settings.api_port,
-        reload=settings.is_development
+        reload=settings.is_development,
+        log_level="critical",
+        access_log=False
     )

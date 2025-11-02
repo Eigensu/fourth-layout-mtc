@@ -26,10 +26,12 @@ const registerSchema = z
     mobile: z
       .string({ required_error: "Mobile number is required" })
       .trim()
+      .refine((v) => !/[+]/.test(v), "Do not include country code (e.g., +91). Enter 10-digit mobile number")
+      .refine((v) => !/^00/.test(v.trim()), "Do not include country code (e.g., 0091). Enter 10-digit mobile number")
       .refine((v) => {
         const digits = v.replace(/\D/g, "");
-        return digits.length >= 10 && digits.length <= 15;
-      }, "Enter a valid mobile number (10-15 digits)"),
+        return /^\d{10}$/.test(digits);
+      }, "Enter a valid 10-digit mobile number"),
     full_name: z.string().min(1, "Full name is required"),
     password: z
       .string()
@@ -153,6 +155,8 @@ export function RegisterForm() {
             className="rounded-2xl"
             inputMode="tel"
             autoComplete="tel"
+            maxLength={10}
+            pattern="[0-9]{10}"
           />
 
           {/* Avatar upload removed - optional on backend */}

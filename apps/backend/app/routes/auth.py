@@ -2,7 +2,17 @@ from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File,
 from datetime import datetime, timedelta
 
 from app.models.user import User, RefreshToken
-from app.schemas.auth import UserRegister, UserLogin, Token, ResetPasswordByMobile, ChangePassword
+import logging
+from app.schemas.auth import (
+    UserRegister,
+    UserLogin,
+    Token,
+    ResetPasswordByMobile,
+    ChangePassword,
+    ForgotPasswordRequest,
+    ForgotPasswordVerify,
+    ForgotPasswordReset,
+)
 from app.schemas.user import UserResponse
 from app.utils.security import (
     get_password_hash,
@@ -16,10 +26,15 @@ from config.settings import get_settings
 from pydantic import EmailStr, ValidationError
 from typing import Optional
 from app.utils.gridfs import upload_avatar_to_gridfs
+from app.services.auth.password_reset import (
+    start_session as pr_start_session,
+    verify_otp_and_issue_token as pr_verify_and_issue,
+    reset_password as pr_reset_password,
+)
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 settings = get_settings()
-
+logger = logging.getLogger("app.auth")
 
 @router.post("/register", response_model=Token, status_code=status.HTTP_201_CREATED)
 async def register(
@@ -263,6 +278,63 @@ async def reset_password_by_mobile(payload: ResetPasswordByMobile):
 
     return {"message": "Password updated successfully"}
 
+@router.post("/forgot-password/request")
+async def forgot_password_request(payload: ForgotPasswordRequest):
+    """Start forgot password flow by sending OTP to the provided phone.
+    Always return generic response to avoid user enumeration."""
+    logger.info(
+        "POST /api/auth/forgot-password/request body={'phone':'[redacted]'}"
+    )
+    try:
+        await pr_start_session(payload.phone)
+        logger.info(
+            "Response 200 /api/auth/forgot-password/request body={'message':'If the phone exists, an OTP has been sent.'}"
+        )
+    except Exception as e:
+        # Intentionally return generic message regardless of internal failures
+        logger.exception(
+            "Internal error during forgot-password request; responding with generic message"
+        )
+    return {"message": "If the phone exists, an OTP has been sent."}
+
+
+@router.post("/forgot-password/verify")
+async def forgot_password_verify(payload: ForgotPasswordVerify):
+    """Verify OTP and issue short-lived reset token."""
+    logger.info(
+        "POST /api/auth/forgot-password/verify body={'phone':'[redacted]','otp':'[redacted]'}"
+    )
+    try:
+        reset_token, ttl = await pr_verify_and_issue(payload.phone, payload.otp)
+        logger.info(
+            "Response 200 /api/auth/forgot-password/verify body={'reset_token':'[redacted]','expires_in_sec':%s}",
+            ttl,
+        )
+        return {"reset_token": reset_token, "expires_in_sec": ttl}
+    except Exception:
+        logger.warning(
+            "Response 400 /api/auth/forgot-password/verify body={'detail':'Invalid or expired OTP'}"
+        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired OTP")
+
+
+@router.post("/forgot-password/reset")
+async def forgot_password_reset(payload: ForgotPasswordReset):
+    """Reset password using a valid reset token."""
+    logger.info(
+        "POST /api/auth/forgot-password/reset body={'reset_token':'[redacted]','new_password':'[redacted]'}"
+    )
+    try:
+        await pr_reset_password(payload.reset_token, payload.new_password)
+        logger.info(
+            "Response 200 /api/auth/forgot-password/reset body={'message':'Password updated.'}"
+        )
+        return {"message": "Password updated."}
+    except Exception:
+        logger.warning(
+            "Response 400 /api/auth/forgot-password/reset body={'detail':'Invalid or expired reset token'}"
+        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired reset token")
 
 @router.post("/change-password")
 async def change_password(

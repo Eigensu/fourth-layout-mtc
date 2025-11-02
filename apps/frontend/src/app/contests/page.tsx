@@ -83,9 +83,9 @@ export default function ContestsPage() {
         <div className="grid gap-4 sm:gap-5">
           {activeContests.map((c) => (
             <div key={c.id} className="w-full">
-              <div className="rounded-3xl bg-white/90 backdrop-blur shadow-md px-4 sm:px-6 py-5 sm:py-6 min-h-[140px]">
-                <div className="flex items-start justify-between gap-4 sm:gap-6">
-                  <div className="min-w-0">
+              <div className="rounded-3xl bg-white/90 backdrop-blur shadow-md px-4 sm:px-6 py-5 sm:py-6 min-h-[160px] h-full">
+                <div className="flex items-start justify-between gap-4 sm:gap-6 h-full">
+                  <div className="min-w-0 flex flex-col h-full">
                     <button
                       onClick={() => router.push(`/contests/${c.id}`)}
                       className="text-xl sm:text-2xl font-bold text-gray-900 hover:underline block text-left leading-tight break-words whitespace-normal"
@@ -101,7 +101,7 @@ export default function ContestsPage() {
                     <div className="text-[11px] sm:text-xs text-gray-500 mt-1 leading-snug">
                       {formatISTRange(c.start_at, c.end_at)}
                     </div>
-                    <div className="mt-2 flex items-center gap-2">
+                    <div className="mt-auto pt-3 flex items-center gap-2">
                       {joinedContestIds.has(c.id) ? (
                         <button
                           onClick={() => router.push(`/contests/${c.id}/team`)}
@@ -156,9 +156,9 @@ export default function ContestsPage() {
           <div className="grid gap-4 sm:gap-5">
             {upcomingContests.map((c) => (
               <div key={c.id} className="w-full">
-                <div className="rounded-3xl bg-white/90 backdrop-blur shadow-md px-4 sm:px-6 py-5 sm:py-6 min-h-[140px]">
-                  <div className="flex items-start justify-between gap-4 sm:gap-6">
-                    <div className="min-w-0">
+                <div className="rounded-3xl bg-white/90 backdrop-blur shadow-md px-4 sm:px-6 py-5 sm:py-6 min-h-[160px] h-full">
+                  <div className="flex items-start justify-between gap-4 sm:gap-6 h-full">
+                    <div className="min-w-0 flex flex-col h-full">
                       <button
                         onClick={() => router.push(`/contests/${c.id}`)}
                         className="text-xl sm:text-2xl font-bold text-gray-900 leading-tight break-words hover:underline text-left whitespace-normal"
@@ -174,7 +174,7 @@ export default function ContestsPage() {
                       <div className="text-[11px] sm:text-xs text-gray-500 mt-1 leading-snug">
                         Starts: {formatIST(c.start_at)} IST · Ends: {formatIST(c.end_at)} IST
                       </div>
-                      <div className="mt-2 flex items-center gap-2">
+                      <div className="mt-auto pt-3 flex items-center gap-2">
                         {joinedContestIds.has(c.id) ? (
                           <button
                             onClick={() => handleJoin(c.id)}

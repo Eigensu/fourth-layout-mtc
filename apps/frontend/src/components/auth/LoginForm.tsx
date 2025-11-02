@@ -5,11 +5,12 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useAuth } from "@/contexts/AuthContext";
 import { Input } from "./Input";
 import { Button } from "@/components/ui/Button";
-import { ForgotPasswordModal } from "./ForgotPasswordModal";
+// Removed legacy ForgotPasswordModal in favor of new OTP flow pages
 
 // Validation schema: allow username (>=3 chars) OR mobile number (10-20 digits)
 const loginSchema = z.object({
@@ -32,11 +33,11 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>;
 
 export function LoginForm() {
+  const router = useRouter();
   const { login } = useAuth();
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [forgotOpen, setForgotOpen] = useState(false);
 
   const {
     register,
@@ -126,7 +127,7 @@ export function LoginForm() {
             <button
               type="button"
               className="text-sm text-primary-600 hover:text-primary-700 font-medium"
-              onClick={() => setForgotOpen(true)}
+              onClick={() => router.push("/auth/forgot-password")}
             >
               Forgot password?
             </button>
@@ -155,11 +156,7 @@ export function LoginForm() {
           </div>
         </form>
       </div>
-      <ForgotPasswordModal
-        open={forgotOpen}
-        onClose={() => setForgotOpen(false)}
-      />
-      {/* Footer Note */}
+      {/* Legacy modal removed */}
       <p className="text-center text-xs text-gray-500 mt-4">
         By continuing, you agree to our Terms of Service and Privacy Policy
       </p>

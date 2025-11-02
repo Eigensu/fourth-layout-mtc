@@ -252,10 +252,10 @@ export default function HomePage() {
                           router.push(`/contests/${c.id}`);
                         }
                       }}
-                      className="bg-white/80 backdrop-blur-sm rounded-2xl border border-primary-100 p-5 shadow-sm cursor-pointer hover:shadow md:transition min-h-[140px] h-full"
+                      className="bg-white/80 backdrop-blur-sm rounded-2xl border border-primary-100 p-5 shadow-sm cursor-pointer hover:shadow md:transition min-h-[160px] h-full"
                     >
-                      <div className="flex items-start justify-between">
-                        <div className="min-w-0">
+                      <div className="flex items-start justify-between h-full">
+                        <div className="min-w-0 flex flex-col h-full">
                           <h3 className="text-lg sm:text-xl font-semibold text-gray-900 break-words whitespace-normal overflow-visible hyphens-auto">
                             {c.name}
                           </h3>
@@ -267,7 +267,7 @@ export default function HomePage() {
                           <div className="text-xs text-gray-500 mt-1">
                             {formatEndsIn(c.end_at)}
                           </div>
-                          <div className="mt-2 flex items-center gap-2">
+                          <div className="mt-auto pt-3 flex items-center gap-2">
                             {!joinedContestIds.has(c.id) ? (
                               isAuthenticated ? (
                                 <Link

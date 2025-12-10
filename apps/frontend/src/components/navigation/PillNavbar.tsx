@@ -158,11 +158,11 @@ const PillNavbar: React.FC<PillNavbarProps> = ({
               className="flex items-center pl-2 pr-3 cursor-pointer"
             >
               <Image
-                src="/logo.jpeg"
+                src="/walle-logo.png"
                 alt="Wall-E Arena Logo"
-                width={32}
-                height={32}
-                className="rounded-full object-cover"
+                width={80}
+                height={80}
+                className="rounded-full object-cover -my-4"
               />
             </Link>
             {visibleItems.map((item) => {
@@ -173,10 +173,9 @@ const PillNavbar: React.FC<PillNavbarProps> = ({
                   onClick={() => handleNavigation(item.href)}
                   className={`
                     flex items-center justify-center space-x-1.5 rounded-full font-medium whitespace-nowrap px-6 py-2.5 border
-                    ${
-                      isActive
-                        ? "bg-gradient-brand text-text-main border-accent-pink-soft"
-                        : "text-text-muted hover:text-text-main hover:bg-bg-card-soft border-transparent"
+                    ${isActive
+                      ? "bg-gradient-brand text-text-main border-accent-pink-soft"
+                      : "text-text-muted hover:text-text-main hover:bg-bg-card-soft border-transparent"
                     }
                     outline-none focus:outline-none focus-visible:outline-none focus:ring-0 active:bg-transparent
                   `}
@@ -274,24 +273,21 @@ const PillNavbar: React.FC<PillNavbarProps> = ({
           </div>
         </div>
         {/* Mobile Navigation Header */}
-        <div className="md:hidden bg-bg-elevated shadow-md border border-border-subtle">
+        <div className="md:hidden bg-bg-elevated shadow-md border-b border-border-subtle">
           <div className="flex items-center justify-between p-3">
             {/* Logo */}
             <Link
               href="/"
               aria-label="Go to Home"
-              className="flex items-center gap-2 -ml-1 cursor-pointer"
+              className="flex items-center cursor-pointer"
             >
               <Image
-                src="/logo.jpeg"
+                src="/walle-logo.png"
                 alt="Wall-E Arena Logo"
-                width={32}
-                height={32}
-                className="rounded-full object-cover"
+                width={80}
+                height={80}
+                className="rounded-full object-cover -my-6"
               />
-              <span className="font-semibold text-text-main text-sm">
-                Wall-E Arena
-              </span>
             </Link>{" "}
             {/* Hamburger Menu Button */}
             <button
@@ -320,25 +316,23 @@ const PillNavbar: React.FC<PillNavbarProps> = ({
 
       {/* Side Menu Drawer */}
       <div
-        className={`fixed top-0 right-0 h-full w-80 bg-bg-card shadow-2xl z-50 md:hidden transform transition-transform duration-300 ease-in-out ${
-          mobileMenuOpen ? "translate-x-0" : "translate-x-full"
-        }`}
+        className={`fixed top-0 right-0 h-full w-80 bg-bg-card shadow-2xl z-50 md:hidden transform transition-transform duration-300 ease-in-out ${mobileMenuOpen ? "translate-x-0" : "translate-x-full"
+          }`}
       >
         {/* Menu Header */}
         <div className="flex items-center justify-between p-4 border-b border-border-subtle">
           <Link
             href="/"
             aria-label="Go to Home"
-            className="flex items-center gap-2 -ml-1 cursor-pointer"
+            className="flex items-center cursor-pointer"
           >
             <Image
-              src="/logo.jpeg"
+              src="/walle-logo.png"
               alt="Wall-E Arena Logo"
-              width={32}
-              height={32}
-              className="rounded-full object-cover"
+              width={72}
+              height={72}
+              className="rounded-full object-cover -my-3"
             />
-            <span className="font-semibold text-text-main">Wall-E Arena</span>
           </Link>
           <button
             onClick={() => setMobileMenuOpen(false)}
@@ -360,10 +354,9 @@ const PillNavbar: React.FC<PillNavbarProps> = ({
                   onClick={() => handleNavigation(item.href)}
                   className={`
                     w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-medium
-                    ${
-                      isActive
-                        ? "bg-gradient-primary text-white shadow-md"
-                        : "text-text-muted hover:bg-bg-card-soft hover:text-text-main"
+                    ${isActive
+                      ? "bg-gradient-primary text-white shadow-md"
+                      : "text-text-muted hover:bg-bg-card-soft hover:text-text-main"
                     }
                     outline-none focus:outline-none focus-visible:outline-none focus:ring-0 active:bg-transparent
                   `}

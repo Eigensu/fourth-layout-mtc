@@ -200,7 +200,7 @@ export default function HomePage() {
                       priority
                     />
                     <h1 className="text-4xl sm:text-5xl font-extrabold text-primary-700 tracking-tight leading-tight mb-4">
-                      MWPL Season 2 Fantasy League
+                      Lodha park cricket league
                     </h1>
                     <p className="text-lg sm:text-xl text-gray-700 mb-8 max-w-xl mx-auto leading-relaxed">
                       Build your dream team, compete with friends, and rise to

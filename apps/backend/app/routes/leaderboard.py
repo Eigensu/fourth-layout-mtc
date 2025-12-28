@@ -34,7 +34,7 @@ async def get_optional_current_user(authorization: Optional[str] = Header(None))
 
 
 async def _compute_team_points(team: Team) -> float:
-    """Sum current points of all players in a team."""
+    """Sum current points of all players in a team with women's slot and captain/VC multipliers."""
     player_object_ids = []
     for pid in team.player_ids:
         try:
@@ -43,8 +43,39 @@ async def _compute_team_points(team: Team) -> float:
             continue
     if not player_object_ids:
         return 0.0
+    
     players = await PublicPlayer.find({"_id": {"$in": player_object_ids}}).to_list()
-    return float(sum(float(p.points or 0.0) for p in players))
+    
+    # Fetch all slots to check for women's slot
+    from app.models.admin.slot import Slot
+    slots_map = {}
+    all_slots = await Slot.find_all().to_list()
+    for s in all_slots:
+        slots_map[str(s.id)] = s
+    
+    total = 0.0
+    captain_id = str(team.captain_id) if team.captain_id else None
+    vice_id = str(team.vice_captain_id) if team.vice_captain_id else None
+    
+    for p in players:
+        points = float(p.points or 0.0)
+        
+        # Apply women's slot multiplier first (2x)
+        if p.slot:
+            slot = slots_map.get(str(p.slot))
+            if slot and getattr(slot, 'is_women_slot', False):
+                points *= 2.0  # Women's slot 2x multiplier
+        
+        # Then apply captain/vice-captain multiplier (stacks with women's slot)
+        pid = str(p.id)
+        if captain_id and pid == captain_id:
+            points *= 2.0
+        elif vice_id and pid == vice_id:
+            points *= 1.5
+        
+        total += points
+    
+    return float(total)
 
 
 @router.get("", response_model=LeaderboardResponseSchema)

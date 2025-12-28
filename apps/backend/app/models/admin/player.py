@@ -15,6 +15,7 @@ class Player(Document):
     slot: Optional[str] = None  # Slot assignment for the player (Slot ObjectId string)
     image_url: Optional[str] = None
     stats: Optional[dict] = None  # Batting avg, bowling avg, etc.
+    gender: Optional[str] = None  # "male", "female", or None
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 

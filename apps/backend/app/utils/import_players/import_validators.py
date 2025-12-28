@@ -12,6 +12,16 @@ STATUS_MAPPINGS = {
 
 ALLOWED_STATUSES = {"Active", "Inactive", "Injured"}
 
+# Gender normalization
+GENDER_MAPPINGS = {
+    "m": "male",
+    "f": "female",
+    "male": "male",
+    "female": "female",
+}
+
+ALLOWED_GENDERS = {"male", "female"}
+
 
 class ValidationError(Exception):
     """Validation error with field and message"""
@@ -38,6 +48,20 @@ def normalize_status(status: Optional[str]) -> str:
         return STATUS_MAPPINGS[status_lower]
     
     raise ValidationError("status", f"Invalid status '{status}'. Allowed: {', '.join(ALLOWED_STATUSES)}")
+
+
+def normalize_gender(gender: Optional[str]) -> Optional[str]:
+    """Normalize gender value"""
+    if not gender:
+        return None
+    
+    gender_clean = gender.strip().lower()
+    
+    # Try mapping
+    if gender_clean in GENDER_MAPPINGS:
+        return GENDER_MAPPINGS[gender_clean]
+    
+    raise ValidationError("gender", f"Invalid gender '{gender}'. Allowed: {', '.join(ALLOWED_GENDERS)}")
 
 
 def validate_name(name: Optional[str]) -> str:
@@ -159,7 +183,7 @@ async def validate_player_row(
         If error is not None, normalized_data may be partial
     """
     known_fields = {
-        "name", "team", "status", "points",
+        "name", "team", "status", "points", "gender",
         "slot_code", "slot_name", "image_url", "image", "_row_number"
     }
     
@@ -176,6 +200,7 @@ async def validate_player_row(
             "status": normalize_status(row.get("status")),
             "price": points_value,  # Map points to price for database
             "points": 0,  # Always start with 0 accumulated points
+            "gender": normalize_gender(row.get("gender")),
             "image_url": image_url,
             "stats": extract_stats(row, known_fields),
         }

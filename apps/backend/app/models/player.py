@@ -19,6 +19,7 @@ class Player(Document):
     form: Optional[str] = None  # Recent form indicator
     injury_status: Optional[str] = None
     image_url: Optional[str] = None
+    gender: Optional[str] = None  # "male", "female", or None
     
     # Metadata
     created_at: datetime = Field(default_factory=datetime.utcnow)

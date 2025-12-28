@@ -254,7 +254,19 @@ async def contest_leaderboard(
     # 3) Build lookup: player_id(str) -> points(float)
     pcp_points_map: Dict[str, float] = {str(doc.player_id): float(doc.points or 0.0) for doc in pcp_docs}
 
-    # 4) Sum per team and build computed list (apply C/VC multipliers)
+    # 3.5) Fetch all players and slots for women's slot multiplier
+    from app.models.admin.slot import Slot
+    players_list = []
+    if all_player_ids:
+        players_list = await Player.find({"_id": {"$in": list(all_player_ids)}}).to_list()
+    players_by_id_map: Dict[str, Player] = {str(p.id): p for p in players_list}
+    
+    slots_map = {}
+    all_slots = await Slot.find_all().to_list()
+    for s in all_slots:
+        slots_map[str(s.id)] = s
+
+    # 4) Sum per team and build computed list (apply women's slot + C/VC multipliers)
     computed = []
     for enr in enrollments:
         team = teams_by_id.get(str(enr.team_id))
@@ -271,6 +283,15 @@ async def contest_leaderboard(
         for oid in oids:
             pid = str(oid)
             base = float(pcp_points_map.get(pid, 0.0))
+            
+            # Apply women's slot multiplier first (2x)
+            player = players_by_id_map.get(pid)
+            if player and player.slot:
+                slot = slots_map.get(str(player.slot))
+                if slot and getattr(slot, 'is_women_slot', False):
+                    base *= 2.0
+            
+            # Then apply captain/vice-captain multiplier (stacks)
             if captain_id and pid == captain_id:
                 base *= 2.0
             elif vice_id and pid == vice_id:
@@ -456,6 +477,21 @@ async def get_team_in_contest(contest_id: str, team_id: str, current_user: Optio
         }).to_list()
     pcp_points_map: Dict[str, float] = {str(doc.player_id): float(doc.points or 0.0) for doc in pcp_docs}
 
+    # Fetch all slots to check for women's slot
+    from app.models.admin.slot import Slot
+    slots_map = {}
+    all_slots = await Slot.find_all().to_list()
+    for s in all_slots:
+        slots_map[str(s.id)] = s
+
+
+    # Fetch slots for women's slot multiplier
+    from app.models.admin.slot import Slot
+    slots_map = {}
+    all_slots = await Slot.find_all().to_list()
+    for s in all_slots:
+        slots_map[str(s.id)] = s
+
     player_items: List[ContestTeamPlayerSchema] = []
     captain_id = str(team.captain_id) if team.captain_id else None
     vice_id = str(team.vice_captain_id) if team.vice_captain_id else None
@@ -463,8 +499,16 @@ async def get_team_in_contest(contest_id: str, team_id: str, current_user: Optio
         p = players_by_id.get(pid)
         if not p:
             continue
-        # Apply multipliers for this player's contest points if C/VC
+        # Apply multipliers for this player's contest points
         contest_pts = float(pcp_points_map.get(pid, 0.0))
+        
+        # Apply women's slot multiplier first (2x)
+        if p.slot:
+            slot = slots_map.get(str(p.slot))
+            if slot and getattr(slot, 'is_women_slot', False):
+                contest_pts *= 2.0
+        
+        # Then apply captain/vice-captain multiplier (stacks)
         if captain_id and pid == captain_id:
             contest_pts *= 2.0
         elif vice_id and pid == vice_id:

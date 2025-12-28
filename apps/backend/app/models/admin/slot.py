@@ -13,6 +13,7 @@ class Slot(Document):
     max_select: int = 4
     description: Optional[str] = None
     requirements: Optional[dict] = None  # e.g., minimum stats required
+    is_women_slot: bool = False  # Women-only slot with 2x points multiplier
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 

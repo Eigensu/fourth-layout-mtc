@@ -201,6 +201,7 @@ class PlayerImportService:
                     existing.price = validated_data["price"]
                     existing.points = validated_data["points"]
                     existing.slot = validated_data.get("slot")
+                    existing.gender = validated_data.get("gender")  # Add gender field
                     existing.image_url = validated_data.get("image_url")
                     existing.stats = validated_data.get("stats")
                     existing.updated_at = datetime.utcnow()
@@ -215,6 +216,7 @@ class PlayerImportService:
                         price=validated_data["price"],
                         points=validated_data["points"],
                         slot=validated_data.get("slot"),
+                        gender=validated_data.get("gender"),  # Add gender field
                         image_url=validated_data.get("image_url"),
                         stats=validated_data.get("stats"),
                         created_at=datetime.utcnow(),

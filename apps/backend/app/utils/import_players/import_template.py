@@ -72,7 +72,7 @@ async def generate_xlsx_template(slot_codes: Optional[list[str]] = None) -> Bina
     
     # Set column widths
     ws.column_dimensions["A"].width = 20  # Name
-    ws.column_dimensions["B"].width = 18  # Team
+    ws.column_dimensions["B"].width = 25  # Team
     ws.column_dimensions["C"].width = 10  # Points
     ws.column_dimensions["D"].width = 15  # Slot Code
     ws.column_dimensions["E"].width = 15  # Slot Name
@@ -88,7 +88,7 @@ async def generate_xlsx_template(slot_codes: Optional[list[str]] = None) -> Bina
     gender_dv = DataValidation(
         type="list",
         formula1='"male,female"',
-        allow_blank=True
+        allow_blank=False
     )
     gender_dv.error = "Please select 'male' or 'female'"
     gender_dv.errorTitle = "Invalid Gender"
@@ -106,37 +106,54 @@ async def generate_xlsx_template(slot_codes: Optional[list[str]] = None) -> Bina
     ws.add_data_validation(status_dv)
     status_dv.add(f"H2:H5000")
     
-    # Data validation for Slot Code if provided (column D)
-    if slot_codes:
-        slot_formula = '","'.join(slot_codes[:50])  # Limit to 50 for formula length
-        slot_dv = DataValidation(
-            type="list",
-            formula1=f'"{slot_formula}"',
-            allow_blank=True
-        )
-        slot_dv.error = "Please select a valid slot code"
-        slot_dv.errorTitle = "Invalid Slot"
-        ws.add_data_validation(slot_dv)
-        slot_dv.add(f"D2:D5000")
+    # Data validation for Slot Code (column D) - MEN or WOMEN only
+    slot_dv = DataValidation(
+        type="list",
+        formula1='"MEN,WOMEN"',
+        allow_blank=False
+    )
+    slot_dv.error = "Please select 'MEN' or 'WOMEN'"
+    slot_dv.errorTitle = "Invalid Slot"
+    ws.add_data_validation(slot_dv)
+    slot_dv.add(f"D2:D5000")
     
-    # Add example row
-    example_row = [
-        "Ankit Shah",
-        "DV SPARTANS",
-        1000,
-        "SLOT 1 (Season)",
-        "",
-        "male",
-        "9876543210",
-        "Active",
-        "https://example.com/player.jpg",
-        25,
-        742,
-        0,
+    # Add example rows for both genders
+    example_rows = [
+        # Men's player example
+        [
+            "Virat Kohli",
+            "Mumbai Indians Men",
+            850,
+            "MEN",
+            "Men",
+            "male",
+            "9876543210",
+            "Active",
+            "https://example.com/virat.jpg",
+            120,
+            5420,
+            0,
+        ],
+        # Women's player example
+        [
+            "Smriti Mandhana",
+            "Mumbai Indians Women",
+            720,
+            "WOMEN",
+            "Women",
+            "female",
+            "9876543211",
+            "Active",
+            "https://example.com/smriti.jpg",
+            85,
+            3240,
+            0,
+        ],
     ]
     
-    for col_idx, value in enumerate(example_row, start=1):
-        ws.cell(row=2, column=col_idx).value = value
+    for row_idx, example_row in enumerate(example_rows, start=2):
+        for col_idx, value in enumerate(example_row, start=1):
+            ws.cell(row=row_idx, column=col_idx).value = value
     
     # Add instructions in a new sheet
     instructions = wb.create_sheet("Instructions")
@@ -145,23 +162,35 @@ async def generate_xlsx_template(slot_codes: Optional[list[str]] = None) -> Bina
     instruction_text = [
         ("Player Import Template Instructions", True),
         ("", False),
+        ("IMPORTANT - New Team Selection System:", True),
+        ("• Only 2 slots available: MEN and WOMEN", False),
+        ("• Team names MUST include gender (e.g., 'Mumbai Indians Men', 'Mumbai Indians Women')", False),
+        ("• Each team should have exactly 5 players", False),
+        ("• Gender field is REQUIRED for all players", False),
+        ("", False),
         ("Required Fields:", True),
         ("• Name: Player's full name (required)", False),
-        ("• Team: Team name (required)", False),
-        ("• Points: Player points (required)", False),
+        ("• Team: Team name with gender suffix (required, e.g., 'Team A Men')", False),
+        ("• Points: Player points (required, numeric)", False),
+        ("• Slot Code: Must be 'MEN' or 'WOMEN' (required)", False),
+        ("• Gender: Must be 'male' or 'female' (required)", False),
         ("", False),
         ("Optional Fields:", True),
-        ("• Slot Code/Name: Reference to slot assignment (e.g., 'SLOT 1 (Season)')", False),
-        ("• Gender: Player gender - 'male' or 'female' (required for women's slot)", False),
-        ("• Mobile: Contact number for the player (digits only is recommended)", False),
+        ("• Slot Name: Auto-filled based on Slot Code", False),
+        ("• Mobile: Contact number for the player", False),
         ("• Status: Active, Inactive, or Injured (default: Active)", False),
         ("• Image URL: Player image URL", False),
-        ("• Additional stats: Any extra columns (matches, runs, wickets, etc.) will be stored as stats", False),
+        ("• Stats: Matches, Runs, Wickets (stored as player stats)", False),
+        ("", False),
+        ("Team Selection Rules:", True),
+        ("• Total squad: 16 players (12 men + 4 women)", False),
+        ("• Maximum 3 players from any single team (per gender)", False),
+        ("• Example: Can select 3 from 'Mumbai Indians Men' AND 3 from 'Mumbai Indians Women'", False),
         ("", False),
         ("Tips:", True),
-        ("• Use the dropdown menu for Gender and Status", False),
-        ("• Set gender to 'female' for players who can be assigned to women's slot (Slot 4)", False),
-        ("• Delete the example row before importing", False),
+        ("• Use the dropdown menu for Gender, Status, and Slot Code", False),
+        ("• Ensure team names are consistent (same spelling, capitalization)", False),
+        ("• Delete the example rows before importing", False),
         ("• Save file as .xlsx format", False),
         ("• Maximum 5,000 rows per file", False),
     ]
@@ -187,19 +216,33 @@ def generate_csv_template() -> str:
     # Write header
     writer.writerow(TEMPLATE_COLUMNS)
     
-    # Write example row
+    # Write example rows
     writer.writerow([
-        "Ankit Shah",
-        "DV SPARTANS",
-        1000,
-        "SLOT 1 (Season)",
-        "",
+        "Virat Kohli",
+        "Mumbai Indians Men",
+        850,
+        "MEN",
+        "Men",
         "male",
         "9876543210",
         "Active",
-        "https://example.com/player.jpg",
-        25,
-        742,
+        "https://example.com/virat.jpg",
+        120,
+        5420,
+        0,
+    ])
+    writer.writerow([
+        "Smriti Mandhana",
+        "Mumbai Indians Women",
+        720,
+        "WOMEN",
+        "Women",
+        "female",
+        "9876543211",
+        "Active",
+        "https://example.com/smriti.jpg",
+        85,
+        3240,
         0,
     ])
     

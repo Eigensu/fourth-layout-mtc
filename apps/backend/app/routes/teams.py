@@ -108,6 +108,31 @@ async def create_team(
             },
         )
 
+    # Enforce per-team constraint (max 3 players from any single team)
+    team_counts: Dict[str, int] = {}
+    for p in players:
+        if p.team:
+            team_counts[p.team] = team_counts.get(p.team, 0) + 1
+
+    violations_team = []
+    MAX_PER_TEAM = 3  # Configurable in future
+    for team_name, count in team_counts.items():
+        if count > MAX_PER_TEAM:
+            violations_team.append({
+                "team": team_name,
+                "count": count,
+                "max_allowed": MAX_PER_TEAM,
+            })
+
+    if violations_team:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "message": "Team violates per-team selection constraints (max 3 players per team)",
+                "violations": violations_team,
+            },
+        )
+
     # If tied to a contest, enforce allowed teams for daily contests
     if team_data.contest_id:
         try:
@@ -382,14 +407,39 @@ async def update_team(
                                 "slot": {"id": sid, "code": slot.code, "name": slot.name},
                                 "expected": {"min_select": slot.min_select, "max_select": slot.max_select},
                                 "actual": count,
-                            }
-                        )
+                        }
+                    )
                 if violations:
                     raise HTTPException(
                         status_code=status.HTTP_400_BAD_REQUEST,
                         detail={
                             "message": "Team violates per-slot selection constraints",
                             "violations": violations,
+                        },
+                    )
+
+                # Enforce per-team constraint (max 3 players from any single team)
+                team_counts_update: Dict[str, int] = {}
+                for p in players:
+                    if p.team:
+                        team_counts_update[p.team] = team_counts_update.get(p.team, 0) + 1
+
+                violations_team_update = []
+                MAX_PER_TEAM = 3  # Configurable in future
+                for team_name, count in team_counts_update.items():
+                    if count > MAX_PER_TEAM:
+                        violations_team_update.append({
+                            "team": team_name,
+                            "count": count,
+                            "max_allowed": MAX_PER_TEAM,
+                        })
+
+                if violations_team_update:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail={
+                            "message": "Team violates per-team selection constraints (max 3 players per team)",
+                            "violations": violations_team_update,
                         },
                     )
         

@@ -259,3 +259,27 @@ async def delete_player(
     await player.delete()
     
     return None
+
+
+@router.delete("", status_code=200)
+async def delete_all_players(
+    current_user: User = Depends(get_admin_user),
+):
+    """
+    Delete ALL players from the database.
+    WARNING: This is irreversible! Use only for testing.
+    Requires authentication.
+    """
+    # Count players before deletion
+    count = await Player.find_all().count()
+    
+    # Delete all players
+    await Player.find_all().delete()
+    
+    # Also delete from public players collection
+    await PublicPlayer.find_all().delete()
+    
+    return {
+        "message": f"Successfully deleted {count} players",
+        "deleted_count": count
+    }

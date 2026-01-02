@@ -21,20 +21,28 @@ def serialize_player(player: Player) -> PlayerOut:
         form=player.form,
         injury_status=player.injury_status,
         image_url=player.image_url,
+        gender=player.gender,  # Include gender field
         created_at=player.created_at,
     )
 
 @router.get("", response_model=List[PlayerOut])
 async def list_players(
     slot: Optional[str] = Query(None, description="Filter players by Slot ObjectId string"),
+    gender: Optional[str] = Query(None, description="Filter by gender: 'male' or 'female'"),
     contest_id: Optional[str] = Query(None, description="If provided, filter by allowed teams for daily contest"),
     limit: int = Query(200, ge=1, le=1000),
     skip: int = Query(0, ge=0),
 ):
-    """Get list of players with optional filtering by slot (ObjectId string)."""
-    query = {}
+    """Get list of players with optional filtering by slot (ObjectId string) and gender."""
+    # Build filters list
+    filters = []
+    
     if slot is not None:
-        query = {"slot": str(slot)}
+        filters.append({"slot": str(slot)})
+    
+    if gender is not None:
+        filters.append({"gender": gender})
+    
     # If contest_id provided and contest is daily with restrictions, apply allowed team filter
     if contest_id:
         try:
@@ -42,14 +50,18 @@ async def list_players(
         except Exception:
             contest = None
         if contest and contest.contest_type == "daily" and contest.allowed_teams:
-            # add team in allowed_teams filter together with slot if present
-            team_filter = {"team": {"$in": contest.allowed_teams}}
-            if query:
-                query = {"$and": [query, team_filter]}
-            else:
-                query = team_filter
+            filters.append({"team": {"$in": contest.allowed_teams}})
 
-    players = await Player.find(query).sort("+name").skip(skip).limit(limit).to_list()
+    # Construct final query
+    if len(filters) > 1:
+        query = {"$and": filters}
+    elif len(filters) == 1:
+        query = filters[0]
+    else:
+        query = {}
+
+    # Sort by team first (for grouping), then by name alphabetically
+    players = await Player.find(query).sort("+team", "+name").skip(skip).limit(limit).to_list()
     return [serialize_player(player) for player in players]
 
 @router.get("/{id}", response_model=PlayerOut)

@@ -14,6 +14,7 @@ class PlayerOut(BaseModel):
     form: Optional[str] = None
     injury_status: Optional[str] = None
     image_url: Optional[str] = None
+    gender: Optional[str] = None  # "male" or "female"
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 

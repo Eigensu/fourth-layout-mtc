@@ -29,12 +29,11 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
       <div
         className={`
           flex items-center gap-2.5 sm:gap-3 p-3 sm:p-4 rounded-xl border-2 transition-all
-          ${
-            disabled && !isSelected
-              ? "border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed"
-              : isSelected
-                ? "border-primary-400 bg-primary-900/90 text-white cursor-pointer shadow-sm"
-                : "border-gray-200 hover:border-gray-300 bg-white cursor-pointer hover:shadow-sm"
+          ${disabled && !isSelected
+            ? "border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed"
+            : isSelected
+              ? "border-primary-400 bg-primary-500/10 cursor-pointer shadow-sm"
+              : "border-border-subtle bg-bg-elevated hover:border-primary-500/20 hover:bg-primary-500/5 cursor-pointer hover:shadow-sm"
           }
           ${className}
         `}
@@ -46,17 +45,18 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
           src={player.image}
           size="md"
           gradientClassName={getAvatarGradient()}
+          className="ring-2 ring-white/10"
         />
 
         {/* Player Info */}
         <div className="flex-1 min-w-0">
           <h4
-            className={`font-semibold text-sm sm:text-base truncate ${isSelected ? "text-white" : "text-gray-900"}`}
+            className={`font-semibold text-sm sm:text-base truncate ${isSelected ? "text-gray-900" : "text-gray-900"}`}
           >
             {player.name}
           </h4>
           <div className="flex items-center gap-1.5 sm:gap-2 mt-0.5 sm:mt-1">
-            <span className="text-xs text-gray-500 flex items-center gap-1">
+            <span className={`text-xs flex items-center gap-1 ${isSelected ? "text-gray-500" : "text-gray-500"}`}>
               <svg
                 className="w-3 h-3"
                 fill="none"
@@ -90,19 +90,15 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
           </div>
         </div>
 
-        {/* Right Side: Score and Checkbox */}
+        {/* Right Side: Checkmark */}
         <div className="flex flex-col items-end gap-0.5 sm:gap-1">
-          <div
-            className={`
-              w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 flex items-center justify-center transition-all
-              ${isSelected ? "bg-primary-500 border-primary-500 scale-110" : "border-gray-300"}
-            `}
-          >
-            {isSelected && (
+          {isSelected && (
+            <div className="w-5 h-5 rounded-full bg-primary-500 flex items-center justify-center">
               <svg
                 className="w-3 h-3 text-white"
                 fill="currentColor"
                 viewBox="0 0 20 20"
+                strokeWidth={3}
               >
                 <path
                   fillRule="evenodd"
@@ -110,8 +106,8 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
                   clipRule="evenodd"
                 />
               </svg>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -121,9 +117,12 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
     <Card
       className={`
         relative transition-all duration-300
-        ${
-          disabled && !isSelected
-            ? "border-2 border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed"
+        ${disabled && !isSelected
+          ? "border-2 border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed"
+          : variant === "captain"
+            ? isCaptain || isViceCaptain
+              ? "cursor-pointer border-2 border-primary-400 bg-primary-500/10 hover:shadow-medium"
+              : "cursor-pointer border-2 border-primary-900/20 bg-primary-900 hover:shadow-medium"
             : isSelected
               ? "cursor-pointer border-2 border-primary-500 bg-primary-600 hover:shadow-medium"
               : "cursor-pointer border-2 border-gray-200 hover:border-gray-300 hover:shadow-medium"
@@ -134,11 +133,11 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
     >
       {/* Captain/Vice-Captain Badges */}
       {isCaptain && (
-        <div className="absolute top-0 right-0 z-10 p-1">
+        <div className="absolute top-2 right-2 z-10">
           <Badge
             variant="warning"
             size="sm"
-            className="shadow-md text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5"
+            className="shadow-md text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 bg-amber-100 text-amber-900 border border-amber-300"
           >
             <span className="hidden sm:inline">Captain (2x)</span>
             <span className="sm:hidden">C (2x)</span>
@@ -146,11 +145,11 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
         </div>
       )}
       {isViceCaptain && (
-        <div className="absolute top-0 right-0 z-10 p-1">
+        <div className="absolute top-2 right-2 z-10">
           <Badge
             variant="secondary"
             size="sm"
-            className="shadow-md text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5"
+            className="shadow-md text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 bg-purple-100 text-purple-900 border border-purple-300"
           >
             <span className="hidden sm:inline">Vice Captain (1.5x)</span>
             <span className="sm:hidden">VC (1.5x)</span>
@@ -161,7 +160,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
       <div className={`p-3 ${variant === "captain" ? "sm:p-3" : "sm:p-4"}`}>
         {/* Player Header */}
         <div
-          className={`flex items-center justify-between ${variant === "captain" ? "mb-2" : "mb-3 sm:mb-4"}`}
+          className={`flex items-start justify-between ${variant === "captain" ? "mb-2" : "mb-3 sm:mb-4"}`}
         >
           <div className="flex items-center space-x-2 sm:space-x-3">
             <Avatar
@@ -173,7 +172,12 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
 
             <div>
               <h4
-                className={`font-semibold ${variant === "captain" ? "text-sm sm:text-base" : "text-sm sm:text-base"} ${isSelected ? "text-white" : "text-gray-900"}`}
+                className={`font-semibold ${variant === "captain" ? "text-sm sm:text-base" : "text-sm sm:text-base"} ${variant === "captain" && !(isCaptain || isViceCaptain)
+                  ? "text-white"
+                  : isSelected
+                    ? "text-white"
+                    : "text-gray-900"
+                  }`}
               >
                 {player.name}
               </h4>
@@ -187,7 +191,12 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
                   </Badge>
                 )}
                 <span
-                  className={`text-xs sm:text-sm ${isSelected ? "text-white/80" : "text-gray-500"}`}
+                  className={`text-xs sm:text-sm ${variant === "captain" && !(isCaptain || isViceCaptain)
+                    ? "text-white/80"
+                    : isSelected
+                      ? "text-white/80"
+                      : "text-gray-500"
+                    }`}
                 >
                   {player.team}
                 </span>
@@ -205,10 +214,10 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
             </div>
           </div>
 
-          {/* Selection Indicator */}
+          {/* Selection Indicator - Moved lower with mt-8 */}
           <div
             className={`
-            w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 flex items-center justify-center transition-all
+            mt-8 w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 flex items-center justify-center transition-all
             ${isSelected ? "bg-primary-500 border-primary-500 scale-110" : "border-gray-300"}
           `}
           >

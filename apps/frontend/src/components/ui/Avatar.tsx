@@ -5,7 +5,7 @@ import { API_BASE_URL } from "@/common/consts";
 interface AvatarProps {
   name: string;
   src?: string;
-  size?: "sm" | "md" | "lg" | "xl";
+  size?: "xs" | "sm" | "md" | "lg" | "xl";
   className?: string;
   /** Optional override for background gradient classes when no src is provided */
   gradientClassName?: string;
@@ -47,6 +47,7 @@ const Avatar: React.FC<AvatarProps> = ({
   };
 
   const sizeClasses = {
+    xs: "w-10 h-10 text-xs",
     sm: "w-8 h-8 text-sm",
     md: "w-10 h-10 text-base",
     lg: "w-12 h-12 text-lg",

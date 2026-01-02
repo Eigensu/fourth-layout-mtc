@@ -2,7 +2,7 @@
 
 import { Card, CardBody } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { Search, Plus, Loader2, AlertCircle, Upload, X } from "lucide-react";
+import { Search, Plus, Loader2, AlertCircle, Upload, X, Trash2 } from "lucide-react";
 import { PlayerImport } from "./import/PlayerImport";
 import { PlayerTableRow } from "./PlayerTableRow";
 import { Pagination } from "./Pagination";
@@ -28,6 +28,7 @@ export function PlayersSection() {
     setStatusFilter,
     setPage,
     handleDelete,
+    handleDeleteAll,
     openImport,
     closeImport,
     handleImportSuccess,
@@ -73,6 +74,15 @@ export function PlayersSection() {
               <Button variant="secondary" size="sm" onClick={openImport}>
                 <Upload className="w-4 h-4 mr-2" />
                 Import
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleDeleteAll}
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete All
               </Button>
               <Button variant="primary" size="sm">
                 <Plus className="w-4 h-4 mr-2" />

@@ -111,6 +111,28 @@ export function usePlayersSection() {
     })();
   }, [players, slotMap]);
 
+  // Handle delete all
+  const handleDeleteAll = async () => {
+    if (!confirm("⚠️ WARNING: This will permanently delete ALL players from the database. This action cannot be undone. Are you absolutely sure?")) return;
+
+    // Second confirmation
+    if (!confirm("This is your last chance. Type 'DELETE' in the next prompt to confirm.")) return;
+
+    const userInput = prompt("Type 'DELETE' to confirm deletion of all players:");
+    if (userInput !== "DELETE") {
+      alert("Deletion cancelled.");
+      return;
+    }
+
+    try {
+      const response = await playersApi.deleteAllPlayers();
+      alert(`✅ Successfully deleted ${response.deleted_count} players`);
+      fetchPlayers(); // Refresh list
+    } catch (err: any) {
+      alert(err?.response?.data?.detail || "Failed to delete all players");
+    }
+  };
+
   return {
     // State
     searchQuery,
@@ -130,6 +152,7 @@ export function usePlayersSection() {
     setStatusFilter,
     setPage,
     handleDelete,
+    handleDeleteAll,
     openImport,
     closeImport,
     handleImportSuccess,

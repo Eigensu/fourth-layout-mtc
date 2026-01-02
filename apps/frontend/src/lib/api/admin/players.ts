@@ -91,4 +91,12 @@ export const playersApi = {
   deletePlayer: async (id: string): Promise<void> => {
     await apiClient.delete(`/api/admin/players/${id}`);
   },
+
+  /**
+   * Delete ALL players (use with caution!)
+   */
+  deleteAllPlayers: async (): Promise<{ message: string; deleted_count: number }> => {
+    const response = await apiClient.delete('/api/admin/players');
+    return response.data;
+  },
 };

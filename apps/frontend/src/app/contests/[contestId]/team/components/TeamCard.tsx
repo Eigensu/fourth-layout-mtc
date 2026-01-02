@@ -4,6 +4,7 @@ import { Badge, Avatar } from "@/components";
 import { formatPoints } from "@/lib/utils";
 import type { Player } from "@/components";
 import { cn } from "@/lib/utils";
+import { Check } from "lucide-react";
 
 interface TeamCardProps {
     teamName: string;
@@ -12,6 +13,7 @@ interface TeamCardProps {
     onPlayerSelect: (playerId: string) => void;
     teamSelectionCount: number;
     maxPerTeam: number;
+    genderLimitReached?: boolean; // New prop to indicate if 12/12 or 4/4 is reached
 }
 
 export function TeamCard({
@@ -21,6 +23,7 @@ export function TeamCard({
     onPlayerSelect,
     teamSelectionCount,
     maxPerTeam,
+    genderLimitReached = false,
 }: TeamCardProps) {
     const isTeamFull = teamSelectionCount >= maxPerTeam;
 
@@ -42,7 +45,7 @@ export function TeamCard({
             <div className="space-y-1.5 sm:space-y-2">
                 {players.map((player) => {
                     const isSelected = selectedPlayerIds.includes(player.id);
-                    const isDisabled = !isSelected && isTeamFull;
+                    const isDisabled = !isSelected && (isTeamFull || genderLimitReached);
 
                     return (
                         <button
@@ -50,13 +53,13 @@ export function TeamCard({
                             onClick={() => !isDisabled && onPlayerSelect(player.id)}
                             disabled={isDisabled}
                             className={cn(
-                                "w-full flex items-center gap-2 p-2 rounded-lg border text-left transition-all duration-200",
+                                "w-full flex items-center gap-3 p-3 rounded-xl border-2 text-left transition-all duration-200",
                                 isSelected &&
-                                "bg-accent-pink-soft/10 border-accent-pink-soft shadow-sm",
+                                "bg-primary-500/10 border-primary-500/30",
                                 isDisabled && "opacity-40 cursor-not-allowed",
                                 !isSelected &&
                                 !isDisabled &&
-                                "hover:bg-bg-elevated hover:border-border-subtle border-transparent"
+                                "bg-bg-elevated border-border-subtle hover:border-primary-500/20 hover:bg-primary-500/5"
                             )}
                             title={
                                 isDisabled
@@ -70,18 +73,25 @@ export function TeamCard({
                                 name={player.name}
                                 size="xs"
                                 src={player.image}
-                                className="flex-shrink-0"
+                                className="flex-shrink-0 ring-2 ring-white/10"
                             />
                             <div className="flex-1 min-w-0">
-                                <div className="text-xs sm:text-sm font-medium truncate text-text-main">
+                                <div className="text-xs sm:text-sm font-semibold truncate text-text-main">
                                     {player.name}
                                 </div>
                                 <div className="text-[10px] sm:text-xs text-text-muted truncate">
                                     {player.team}
                                 </div>
                             </div>
-                            <div className="text-xs sm:text-sm text-success-600 font-semibold flex-shrink-0">
-                                {formatPoints(player.points || 0)}
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                                <div className="text-xs sm:text-sm text-success-600 font-semibold">
+                                    {formatPoints(player.points || 0)}
+                                </div>
+                                {isSelected && (
+                                    <div className="w-5 h-5 rounded-full bg-primary-500 flex items-center justify-center">
+                                        <Check className="w-3 h-3 text-white" strokeWidth={3} />
+                                    </div>
+                                )}
                             </div>
                         </button>
                     );

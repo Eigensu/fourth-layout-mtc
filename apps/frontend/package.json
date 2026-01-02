@@ -3,12 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "next build",
-    "build:turbo": "next build --turbopack",
-    "dev": "next dev -p 3000",
-    "lint": "next lint",
-    "start": "next start",
-    "type-check": "tsc --noEmit",
+    "build": "pnpm next build",
+    "build:turbo": "pnpm next build --turbopack",
+    "dev": "pnpm next dev -p 3000",
+    "lint": "pnpm next lint",
+    "start": "pnpm next start",
+    "type-check": "pnpm tsc --noEmit",
     "clean": "rm -rf .next .turbo node_modules"
   },
   "dependencies": {

@@ -444,6 +444,11 @@ export default function ContestTeamBuilderPage() {
                               onPlayerSelect={handlePlayerSelect}
                               teamSelectionCount={currentTeamCounts[team.name] || 0}
                               maxPerTeam={LIMITS.maxPerTeam}
+                              genderLimitReached={
+                                activeGender === "male"
+                                  ? selectedMen.length >= LIMITS.menPlayers
+                                  : selectedWomen.length >= LIMITS.womenPlayers
+                              }
                             />
                           ))}
                         </div>

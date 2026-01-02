@@ -91,7 +91,6 @@ export function useTeamBuilderV2(
                     points: Number(p.points || 0),
                     image: p.image_url || undefined,
                     slotId: String(p.slot || ""),
-                    stats: p.stats || { matches: 0 },
                 }));
 
                 const mappedWomen: UIBuildPlayer[] = womenPlayers.map((p) => ({
@@ -103,7 +102,6 @@ export function useTeamBuilderV2(
                     points: Number(p.points || 0),
                     image: p.image_url || undefined,
                     slotId: String(p.slot || ""),
-                    stats: p.stats || { matches: 0 },
                 }));
 
                 // Fetch hot player IDs

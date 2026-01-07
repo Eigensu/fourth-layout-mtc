@@ -36,7 +36,7 @@ const nextConfig = {
       },
       {
         protocol: "https",
-        hostname: "api-m11.wallearena.com",
+        hostname: "api-mtc.wallearena.com",
         port: "",
         pathname: "/**",
       },

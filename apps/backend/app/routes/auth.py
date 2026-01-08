@@ -31,6 +31,7 @@ from app.services.auth.password_reset import (
     verify_otp_and_issue_token as pr_verify_and_issue,
     reset_password as pr_reset_password,
 )
+from app.utils.phone import normalize_mobile, validate_mobile_length
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 settings = get_settings()
@@ -42,7 +43,7 @@ async def register(
     email: EmailStr = Form(...),
     password: str = Form(...),
     full_name: Optional[str] = Form(None),
-    mobile: Optional[str] = Form(None),
+    mobile: str = Form(...),
     avatar: Optional[UploadFile] = File(None),
 ):
     """Register a new user"""
@@ -60,6 +61,14 @@ async def register(
         # Match FastAPI validation error format
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=e.errors())
 
+    # Normalize and validate mobile (store digits-only)
+    normalized_mobile = normalize_mobile(mobile)
+    if not normalized_mobile or not validate_mobile_length(normalized_mobile):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Mobile must be 10-15 digits"
+        )
+
     # Check if username exists
     existing_user = await User.find_one(User.username == user_data.username.lower())
     if existing_user:
@@ -76,6 +85,14 @@ async def register(
             detail="Email already registered"
         )
 
+    # Check if mobile exists
+    existing_mobile = await User.find_one(User.mobile == normalized_mobile)
+    if existing_mobile:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Mobile number already registered"
+        )
+
     # Create new user document
     hashed_password = get_password_hash(user_data.password)
     new_user = User(
@@ -83,7 +100,7 @@ async def register(
         email=user_data.email,
         hashed_password=hashed_password,
         full_name=user_data.full_name,
-        mobile=user_data.mobile,
+        mobile=normalized_mobile,
         created_at=datetime.utcnow(),
         updated_at=datetime.utcnow()
     )
@@ -127,15 +144,11 @@ async def login(user_data: UserLogin):
     # First try username lookup (lowercased)
     user = await User.find_one(User.username == identifier.lower())
 
-    # If not found and identifier looks like a mobile, try matching by mobile digits
+    # If not found, try normalized mobile lookup directly
     if not user:
-        input_digits = "".join(ch for ch in identifier if ch.isdigit())
-        if input_digits:
-            async for u in User.find(User.mobile != None):
-                digits = "".join(ch for ch in (u.mobile or "") if ch.isdigit())
-                if digits and digits == input_digits:
-                    user = u
-                    break
+        normalized = normalize_mobile(identifier)
+        if normalized and validate_mobile_length(normalized):
+            user = await User.find_one(User.mobile == normalized)
 
     if not user or not verify_password(user_data.password, user.hashed_password):
         raise HTTPException(
@@ -255,16 +268,15 @@ async def logout(refresh_token: str):
 @router.post("/reset-password-mobile")
 async def reset_password_by_mobile(payload: ResetPasswordByMobile):
     """Reset password by verifying the provided mobile number matches a stored user."""
-    # Normalize input by digits to compare fairly
-    input_digits = ''.join(ch for ch in payload.mobile if ch.isdigit())
+    # Normalize input and find user directly
+    normalized = normalize_mobile(payload.mobile)
+    if not normalized or not validate_mobile_length(normalized):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Mobile must be 10-15 digits"
+        )
 
-    matched_user = None
-    # Since mobile may be stored with symbols/spaces, scan users with a mobile set
-    async for u in User.find(User.mobile != None):
-        digits = ''.join(ch for ch in (u.mobile or '') if ch.isdigit())
-        if digits and digits == input_digits:
-            matched_user = u
-            break
+    matched_user = await User.find_one(User.mobile == normalized)
 
     if not matched_user:
         raise HTTPException(

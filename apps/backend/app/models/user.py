@@ -2,6 +2,7 @@ from beanie import Document, Indexed, PydanticObjectId
 from pydantic import Field, EmailStr, ConfigDict
 from datetime import datetime
 from typing import Optional
+from pymongo import IndexModel
 
 
 class User(Document):
@@ -11,7 +12,7 @@ class User(Document):
     email: Indexed(EmailStr, unique=True)  # type: ignore
     hashed_password: str
     full_name: Optional[str] = None
-    mobile: Optional[str] = None
+    mobile: Indexed(str, unique=True)  # digits-only normalized string
     is_active: bool = True
     is_verified: bool = False
     is_admin: bool = False
@@ -27,7 +28,10 @@ class User(Document):
         indexes = [
             "username",
             "email",
+            "mobile",
             [("created_at", -1)],
+            # Safety: ensure a unique index on mobile even if Beanie field index fails to apply
+            IndexModel([("mobile", 1)], unique=True),
         ]
 
     def __repr__(self):

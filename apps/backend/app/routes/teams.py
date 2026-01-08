@@ -133,6 +133,21 @@ async def create_team(
             },
         )
 
+    # Enforce: a woman cannot be selected as captain
+    try:
+        cap_oid = PydanticObjectId(team_data.captain_id)
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid captain_id")
+    captain_player = next((p for p in players if p.id == cap_oid), None)
+    if not captain_player:
+        # Fallback fetch (shouldn't happen if validations above passed)
+        captain_player = await Player.get(cap_oid)
+    if captain_player and (captain_player.gender or "").lower() == "female":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Female players cannot be selected as captain"
+        )
+
     # If tied to a contest, enforce allowed teams for daily contests
     if team_data.contest_id:
         try:
@@ -345,6 +360,24 @@ async def update_team(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="Captain and vice-captain must be different players"
                 )
+
+            # Enforce: a woman cannot be selected as captain
+            if captain_id:
+                try:
+                    cap_oid = PydanticObjectId(captain_id)
+                except Exception:
+                    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid captain_id")
+                cap_player: Player | None = None
+                # If we already loaded players (when player_ids changed), look there first
+                if "player_ids" in update_data:
+                    cap_player = next((p for p in players if p.id == cap_oid), None)
+                if cap_player is None:
+                    cap_player = await Player.get(cap_oid)
+                if cap_player and (cap_player.gender or "").lower() == "female":
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Female players cannot be selected as captain"
+                    )
             
             # Recalculate total value and validate per-slot constraints if player_ids changed
             if "player_ids" in update_data:

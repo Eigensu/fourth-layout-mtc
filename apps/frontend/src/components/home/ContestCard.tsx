@@ -203,7 +203,7 @@ export function ContestCard({
               )}
             </div>
             <Image
-              src="/Contests/logo.jpeg"
+              src="/Contests/logo.png"
               alt="Contest logo"
               width={120}
               height={32}

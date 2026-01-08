@@ -9,7 +9,15 @@ class UserRegister(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=8)
     full_name: Optional[str] = None
-    mobile: Optional[str] = None
+    mobile: str
+
+    @validator('mobile')
+    def mobile_basic_validation(cls, v):
+        v = v.strip()
+        digits = ''.join(ch for ch in v if ch.isdigit())
+        if len(digits) < 10 or len(digits) > 15:
+            raise ValueError('Mobile must be 10-15 digits')
+        return v
 
     @validator('username')
     def username_alphanumeric(cls, v):

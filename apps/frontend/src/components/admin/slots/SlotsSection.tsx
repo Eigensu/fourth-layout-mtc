@@ -289,7 +289,7 @@ export function SlotsSection() {
                   placeholder="Search slots by code or name..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-gray-900"
                 />
               </div>
             </div>
@@ -345,7 +345,7 @@ export function SlotsSection() {
                     onChange={(e) =>
                       setEditForm((f) => ({ ...f, name: e.target.value }))
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent text-gray-900"
                   />
                 </div>
                 {/* Category removed from edit form */}
@@ -364,7 +364,7 @@ export function SlotsSection() {
                           min_select: Number(e.target.value),
                         }))
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent text-gray-900"
                     />
                   </div>
                   <div>
@@ -381,7 +381,7 @@ export function SlotsSection() {
                           max_select: Number(e.target.value),
                         }))
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent text-gray-900"
                     />
                   </div>
                 </div>
@@ -441,23 +441,23 @@ export function SlotsSection() {
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                  <h3 className="text-lg font-semibold text-white mb-1">
                     {slot.name}
                   </h3>
                   {/* Category removed from UI */}
                   <div className="space-y-3">
-                    <div className="flex items-center gap-3 text-sm text-gray-600">
+                    <div className="flex items-center gap-3 text-sm text-white/90">
                       <Users className="w-4 h-4" />
                       <span>{slot.player_count} Players</span>
                     </div>
-                    <div className="flex items-center justify-between text-sm text-gray-600">
+                    <div className="flex items-center justify-between text-sm text-white/90">
                       <span>
                         Min select:{" "}
-                        <span className="font-medium">{slot.min_select}</span>
+                        <span className="font-semibold">{slot.min_select}</span>
                       </span>
                       <span>
                         Max select:{" "}
-                        <span className="font-medium">{slot.max_select}</span>
+                        <span className="font-semibold">{slot.max_select}</span>
                       </span>
                     </div>
                     <div className="pt-2 flex gap-2">
@@ -570,7 +570,7 @@ export function SlotsSection() {
                       setForm((f) => ({ ...f, code: e.target.value }))
                     }
                     placeholder="E.g., BATTERS"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent text-gray-900"
                   />
                 </div>
                 <div>
@@ -583,7 +583,7 @@ export function SlotsSection() {
                       setForm((f) => ({ ...f, name: e.target.value }))
                     }
                     placeholder="E.g., Batters"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent text-gray-900"
                   />
                 </div>
                 {/* Category removed from create form */}
@@ -602,7 +602,7 @@ export function SlotsSection() {
                           min_select: Number(e.target.value),
                         }))
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent text-gray-900"
                     />
                   </div>
                   <div>
@@ -619,7 +619,7 @@ export function SlotsSection() {
                           max_select: Number(e.target.value),
                         }))
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent text-gray-900"
                     />
                   </div>
                 </div>
@@ -695,7 +695,7 @@ export function SlotsSection() {
                           await fetchAssigned(selectedSlot.id);
                         }}
                         placeholder="Search assigned players"
-                        className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent text-gray-900"
                       />
                     </div>
                     <div className="max-h-72 overflow-auto">
@@ -758,7 +758,7 @@ export function SlotsSection() {
                           await fetchAvailable(v);
                         }}
                         placeholder="Search players to assign"
-                        className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent text-gray-900"
                       />
                     </div>
                     <div className="max-h-72 overflow-auto">

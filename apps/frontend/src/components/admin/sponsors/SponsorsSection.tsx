@@ -59,16 +59,16 @@ export function SponsorsSection() {
                   placeholder="Search sponsors..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-gray-900"
                 />
               </div>
             </div>
             <div className="flex gap-2 w-full sm:w-auto">
-              <Button variant="ghost" size="sm">
+              <Button variant="primary" size="sm">
                 <Filter className="w-4 h-4 mr-2" />
                 Filter
               </Button>
-              <Button variant="ghost" size="sm">
+              <Button variant="primary" size="sm">
                 <Upload className="w-4 h-4 mr-2" />
                 Import
               </Button>
@@ -115,40 +115,40 @@ export function SponsorsSection() {
                 )}
                 {/* Row: Name */}
                 <div>
-                  <label className="block text-sm font-medium mb-1">Name</label>
+                  <label className="block text-sm font-medium mb-1 text-gray-900">Name</label>
                   <input
                     required
                     value={form.name}
                     onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none text-gray-900"
                     placeholder="e.g., TechCorp"
                   />
                 </div>
                 {/* Row: Website & Logo URL (optional) */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-1">Website (optional)</label>
+                    <label className="block text-sm font-medium mb-1 text-gray-900">Website (optional)</label>
                     <input
                       type="url"
                       value={form.website}
                       onChange={(e) => setForm((f) => ({ ...f, website: e.target.value }))}
-                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none text-gray-900"
                       placeholder="https://example.com"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">Logo URL (optional)</label>
+                    <label className="block text-sm font-medium mb-1 text-gray-900">Logo URL (optional)</label>
                     <input
                       value={form.logo}
                       onChange={(e) => setForm((f) => ({ ...f, logo: e.target.value }))}
-                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none text-gray-900"
                       placeholder="https://..."
                     />
                   </div>
                 </div>
                 {/* Row: Upload Logo */}
                 <div>
-                  <label className="block text-sm font-medium mb-1">Upload Logo (image/*)</label>
+                  <label className="block text-sm font-medium mb-1 text-gray-900">Upload Logo (image/*)</label>
                   <input
                     type="file"
                     accept="image/*"
@@ -157,7 +157,7 @@ export function SponsorsSection() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">
+                  <label className="block text-sm font-medium mb-1 text-gray-900">
                     Description
                   </label>
                   <textarea
@@ -166,13 +166,13 @@ export function SponsorsSection() {
                     onChange={(e) =>
                       setForm((f) => ({ ...f, description: e.target.value }))
                     }
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none text-gray-900"
                     rows={3}
                     placeholder="Short description..."
                   />
                 </div>
                 <div className="flex items-center gap-6">
-                  <label className="inline-flex items-center gap-2 text-sm">
+                  <label className="inline-flex items-center gap-2 text-sm text-gray-900">
                     <input
                       type="checkbox"
                       checked={form.featured}
@@ -182,7 +182,7 @@ export function SponsorsSection() {
                     />
                     Featured
                   </label>
-                  <label className="inline-flex items-center gap-2 text-sm">
+                  <label className="inline-flex items-center gap-2 text-sm text-gray-900">
                     <input
                       type="checkbox"
                       checked={form.active}
@@ -195,7 +195,7 @@ export function SponsorsSection() {
                 </div>
                 {/* Priority input */}
                 <div>
-                  <label className="block text-sm font-medium mb-1">Priority</label>
+                  <label className="block text-sm font-medium mb-1 text-gray-900">Priority</label>
                   <input
                     type="number"
                     min={1}
@@ -206,7 +206,7 @@ export function SponsorsSection() {
                       // mark as user-touched so effects don't overwrite
                       if (!priorityTouched) setPriorityTouched(true);
                     }}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none text-gray-900"
                     placeholder="e.g., 1"
                     required
                   />
@@ -340,19 +340,19 @@ export function SponsorsSection() {
                   </div>
                 )}
                 <div>
-                  <label className="block text-sm font-medium mb-1">Name</label>
+                  <label className="block text-sm font-medium mb-1 text-gray-900">Name</label>
                   <input
                     required
                     value={editForm.name}
                     onChange={(e) =>
                       setEditForm((f) => ({ ...f, name: e.target.value }))
                     }
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none text-gray-900"
                     placeholder="Sponsor name"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">
+                  <label className="block text-sm font-medium mb-1 text-gray-900">
                     Description
                   </label>
                   <textarea
@@ -364,13 +364,13 @@ export function SponsorsSection() {
                         description: e.target.value,
                       }))
                     }
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none text-gray-900"
                     rows={3}
                     placeholder="Short description..."
                   />
                 </div>
                 <div className="flex items-center gap-6">
-                  <label className="inline-flex items-center gap-2 text-sm">
+                  <label className="inline-flex items-center gap-2 text-sm text-gray-900">
                     <input
                       type="checkbox"
                       checked={editForm.featured}
@@ -378,7 +378,7 @@ export function SponsorsSection() {
                     />
                     Featured
                   </label>
-                  <label className="inline-flex items-center gap-2 text-sm">
+                  <label className="inline-flex items-center gap-2 text-sm text-gray-900">
                     <input
                       type="checkbox"
                       checked={editForm.active}
@@ -388,13 +388,13 @@ export function SponsorsSection() {
                   </label>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Priority</label>
+                  <label className="block text-sm font-medium mb-1 text-gray-900">Priority</label>
                   <input
                     type="number"
                     min={1}
                     value={editForm.priority}
                     onChange={(e) => setEditForm((f) => ({ ...f, priority: Number(e.target.value) }))}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none text-gray-900"
                     placeholder="e.g., 1"
                     required
                   />
@@ -419,16 +419,19 @@ export function SponsorsSection() {
               </div>
             </form>
           </div>
-        </div>
-      )}
+        </div >
+      )
+      }
 
-      {error && (
-        <Card>
-          <CardBody className="p-4 text-red-700 bg-red-50 border border-red-200 rounded-lg">
-            {error}
-          </CardBody>
-        </Card>
-      )}
+      {
+        error && (
+          <Card>
+            <CardBody className="p-4 text-red-700 bg-red-50 border border-red-200 rounded-lg">
+              {error}
+            </CardBody>
+          </Card>
+        )
+      }
 
       {/* Sponsors Grid split into Featured and Other */}
       <div className="space-y-6">
@@ -482,24 +485,24 @@ export function SponsorsSection() {
                         </button>
                       </div>
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">{sponsor.name}</h3>
+                    <h3 className="text-lg font-semibold text-white mb-2">{sponsor.name}</h3>
                     {sponsor.website && (
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-500">Website:</span>
-                        <a href={sponsor.website} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-blue-600 hover:underline truncate max-w-[60%] text-right">{sponsor.website}</a>
+                        <span className="text-sm text-white/90 font-semibold">Website:</span>
+                        <a href={sponsor.website} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-white hover:underline truncate max-w-[60%] text-right">{sponsor.website}</a>
                       </div>
                     )}
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-500">Status:</span>
+                      <span className="text-sm text-white/90 font-semibold">Status:</span>
                       <span className={`px-2 py-1 text-xs font-medium rounded-full ${sponsor.active ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}`}>{sponsor.active ? "Active" : "Inactive"}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-500">Priority:</span>
-                      <span className="text-sm font-medium text-gray-800">{typeof sponsor.priority === "number" && sponsor.priority > 0 ? sponsor.priority : "—"}</span>
+                      <span className="text-sm text-white/90 font-semibold">Priority:</span>
+                      <span className="text-sm font-semibold text-white">{typeof sponsor.priority === "number" && sponsor.priority > 0 ? sponsor.priority : "—"}</span>
                     </div>
                     {typeof sponsor.featured !== "undefined" && (
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-500">Featured:</span>
+                        <span className="text-sm text-white/90 font-semibold">Featured:</span>
                         <span className={`px-2 py-1 text-xs font-medium rounded-full ${sponsor.featured ? "bg-blue-100 text-blue-800" : "bg-gray-100 text-gray-700"}`}>{sponsor.featured ? "Yes" : "No"}</span>
                       </div>
                     )}
@@ -562,24 +565,24 @@ export function SponsorsSection() {
                         </button>
                       </div>
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">{sponsor.name}</h3>
+                    <h3 className="text-lg font-semibold text-white mb-2">{sponsor.name}</h3>
                     {sponsor.website && (
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-500">Website:</span>
-                        <a href={sponsor.website} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-blue-600 hover:underline truncate max-w-[60%] text-right">{sponsor.website}</a>
+                        <span className="text-sm text-white/90 font-semibold">Website:</span>
+                        <a href={sponsor.website} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-white hover:underline truncate max-w-[60%] text-right">{sponsor.website}</a>
                       </div>
                     )}
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-500">Status:</span>
+                      <span className="text-sm text-white/90 font-semibold">Status:</span>
                       <span className={`px-2 py-1 text-xs font-medium rounded-full ${sponsor.active ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}`}>{sponsor.active ? "Active" : "Inactive"}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-500">Priority:</span>
-                      <span className="text-sm font-medium text-gray-800">{typeof sponsor.priority === "number" && sponsor.priority > 0 ? sponsor.priority : "—"}</span>
+                      <span className="text-sm text-white/90 font-semibold">Priority:</span>
+                      <span className="text-sm font-semibold text-white">{typeof sponsor.priority === "number" && sponsor.priority > 0 ? sponsor.priority : "—"}</span>
                     </div>
                     {typeof sponsor.featured !== "undefined" && (
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-500">Featured:</span>
+                        <span className="text-sm text-white/90 font-semibold">Featured:</span>
                         <span className={`px-2 py-1 text-xs font-medium rounded-full ${sponsor.featured ? "bg-blue-100 text-blue-800" : "bg-gray-100 text-gray-700"}`}>{sponsor.featured ? "Yes" : "No"}</span>
                       </div>
                     )}
@@ -593,59 +596,61 @@ export function SponsorsSection() {
         </div>
       </div>
       {/* Delete Confirmation Modal */}
-      {isDeleteOpen && toDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md border border-gray-200">
-            <div className="px-6 py-4 border-b flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Delete Sponsor</h3>
-              <button
-                onClick={() => {
-                  if (deletingId !== toDelete.id) setIsDeleteOpen(false);
-                }}
-                className="text-gray-500 hover:text-gray-700"
-                aria-label="Close delete modal"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="px-6 py-4 space-y-3">
-              {deleteError && (
-                <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">
-                  {deleteError}
-                </div>
-              )}
-              <p className="text-sm text-gray-700">
-                Are you sure you want to permanently delete <span className="font-medium">{toDelete.name}</span>? This action cannot be undone.
-              </p>
-            </div>
-            <div className="px-6 py-4 border-t flex justify-end gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => deletingId !== toDelete.id && setIsDeleteOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={deletingId === toDelete.id}
-                onClick={() => {
-                  if (!toDelete) return;
-                  void (async () => {
-                    await handleDelete(toDelete.id);
-                    // Close only if deletion finished and no error
-                    if (!deleteError) setIsDeleteOpen(false);
-                  })();
-                }}
-                className="!border-red-500 !text-red-600 hover:!bg-red-50"
-              >
-                {deletingId === toDelete.id ? "Deleting..." : "Delete"}
-              </Button>
+      {
+        isDeleteOpen && toDelete && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-md border border-gray-200">
+              <div className="px-6 py-4 border-b flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Delete Sponsor</h3>
+                <button
+                  onClick={() => {
+                    if (deletingId !== toDelete.id) setIsDeleteOpen(false);
+                  }}
+                  className="text-gray-500 hover:text-gray-700"
+                  aria-label="Close delete modal"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="px-6 py-4 space-y-3">
+                {deleteError && (
+                  <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">
+                    {deleteError}
+                  </div>
+                )}
+                <p className="text-sm text-gray-700">
+                  Are you sure you want to permanently delete <span className="font-medium">{toDelete.name}</span>? This action cannot be undone.
+                </p>
+              </div>
+              <div className="px-6 py-4 border-t flex justify-end gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => deletingId !== toDelete.id && setIsDeleteOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={deletingId === toDelete.id}
+                  onClick={() => {
+                    if (!toDelete) return;
+                    void (async () => {
+                      await handleDelete(toDelete.id);
+                      // Close only if deletion finished and no error
+                      if (!deleteError) setIsDeleteOpen(false);
+                    })();
+                  }}
+                  className="!border-red-500 !text-red-600 hover:!bg-red-50"
+                >
+                  {deletingId === toDelete.id ? "Deleting..." : "Delete"}
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )
+      }
+    </div >
   );
 }

@@ -229,7 +229,7 @@ export function CarouselImageModal({
                             required
                             onChange={(e) => setTitle(e.target.value)}
                             placeholder="e.g., Season 2 Announcement"
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900"
                         />
                     </div>
 
@@ -247,7 +247,7 @@ export function CarouselImageModal({
                             value={subtitle}
                             onChange={(e) => setSubtitle(e.target.value)}
                             placeholder="e.g., Join the biggest fantasy league"
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900"
                         />
                     </div>
 
@@ -265,7 +265,7 @@ export function CarouselImageModal({
                             value={linkUrl}
                             onChange={(e) => setLinkUrl(e.target.value)}
                             placeholder="https://example.com"
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900"
                         />
                         <p className="text-xs text-gray-500 mt-1">
                             Clicking the carousel image will navigate to this URL
@@ -287,7 +287,7 @@ export function CarouselImageModal({
                             value={displayOrder}
                             onChange={(e) => handleOrderChange(e.target.value)}
                             required
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900"
                         />
                         <p className="text-xs text-gray-500 mt-1">
                             Lower numbers appear first in the carousel

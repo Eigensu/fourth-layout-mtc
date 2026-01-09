@@ -25,7 +25,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
     const variantClasses = {
       primary:
-        "bg-gradient-primary text-white hover:shadow-glow focus:ring-primary-500 shadow-md hover:shadow-lg",
+        "bg-[#c8badf] text-[#3c1f62] hover:bg-[#d9cbe8] focus:ring-primary-500 shadow-md hover:shadow-lg font-semibold",
       secondary:
         "bg-gradient-secondary text-white hover:shadow-medium focus:ring-secondary-500 shadow-md hover:shadow-lg",
       ghost: "text-gray-700 hover:bg-gray-100 focus:ring-gray-500",

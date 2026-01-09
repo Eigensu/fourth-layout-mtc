@@ -56,7 +56,7 @@ export function PlayersSection() {
                   placeholder="Search players..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-transparent outline-none pl-2 pr-8 text-sm placeholder:text-gray-400"
+                  className="w-full bg-transparent outline-none pl-2 pr-8 text-sm placeholder:text-gray-400 text-gray-900"
                 />
                 {searchQuery && (
                   <button
@@ -71,7 +71,7 @@ export function PlayersSection() {
               </div>
             </div>
             <div className="flex gap-2 w-full sm:w-auto flex-wrap">
-              <Button variant="secondary" size="sm" onClick={openImport}>
+              <Button variant="primary" size="sm" onClick={openImport}>
                 <Upload className="w-4 h-4 mr-2" />
                 Import
               </Button>

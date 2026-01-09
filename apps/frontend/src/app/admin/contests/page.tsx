@@ -216,7 +216,7 @@ export default function AdminContestsPage() {
 
   return (
     <ProtectedRoute requireAdmin={true}>
-      <div className="max-w-5xl mx-auto p-4 space-y-4 text-text-main">
+      <div className="max-w-5xl mx-auto p-4 space-y-4 bg-white min-h-screen">
         <AlertDialog
           open={alertOpen}
           title={alertTitle}
@@ -255,12 +255,12 @@ export default function AdminContestsPage() {
           onConfirm={confirmForceDelete}
         />
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-text-main">
+          <h1 className="text-2xl font-semibold text-gray-900">
             Admin · Contests
           </h1>
           <Link
             href="/admin"
-            className="px-3 py-1 rounded border border-border-subtle text-text-main hover:bg-bg-elevated"
+            className="px-4 py-2 rounded-lg bg-[#c8badf] text-[#3c1f62] font-semibold hover:bg-[#d9cbe8] shadow-md hover:shadow-lg transition-all"
           >
             Back
           </Link>

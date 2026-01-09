@@ -69,7 +69,7 @@ export default function ContestDetailsPage() {
           <div className="text-center mb-2 -mt-12">
             <div className="flex justify-center mt-0">
               <Image
-                src="/Contests/logo.jpeg"
+                src="/mtc-sponsors/title-sponsor.png"
                 alt="Title Sponsor"
                 width={180}
                 height={180}
@@ -103,10 +103,10 @@ export default function ContestDetailsPage() {
                 <div className="mb-5 p-4 rounded-2xl bg-primary-50 inline-flex">
                   <User className="w-12 h-12 text-primary-700" />
                 </div>
-                <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-primary-700">
+                <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-primary-900">
                   {isJoined ? "View Team" : "Make Team"}
                 </h2>
-                <p className="mt-2 text-primary-800 text-sm sm:text-base">
+                <p className="mt-2 text-primary-900 text-sm sm:text-base">
                   {isJoined
                     ? "Open your registered team"
                     : "Assemble your squad and compete together"}
